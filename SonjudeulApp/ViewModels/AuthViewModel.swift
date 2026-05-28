@@ -20,17 +20,26 @@ class AuthViewModel: ObservableObject {
         }
     }
 
+    enum LoginResult {
+        case success
+        case wrongCredentials
+        case wrongRole
+    }
+
     @discardableResult
-    func login(identifier: String, password: String) -> Bool {
+    func login(identifier: String, password: String, role: UserRole) -> LoginResult {
         guard let user = UserStore.shared.findUser(identifier: identifier, password: password) else {
-            return false
+            return .wrongCredentials
+        }
+        guard user.role == role else {
+            return .wrongRole
         }
         currentUser = user
         selectedRole = user.role
         isLoggedIn = true
         UserDefaults.standard.set(true, forKey: "isLoggedIn")
         UserDefaults.standard.set(user.id.uuidString, forKey: "currentUserId")
-        return true
+        return .success
     }
 
     func logout() {

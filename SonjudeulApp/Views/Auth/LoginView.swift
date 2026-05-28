@@ -76,8 +76,14 @@ struct LoginView: View {
 
                     AmberButton(title: "로그인", disabled: !canLogin) {
                         withAnimation {
-                            if !auth.login(identifier: identifier, password: password) {
+                            switch auth.login(identifier: identifier, password: password, role: role) {
+                            case .success:
+                                break
+                            case .wrongCredentials:
                                 errorMessage = "아이디(이메일) 또는 비밀번호가 올바르지 않아요"
+                            case .wrongRole:
+                                let roleLabel = role == .child ? "자녀" : "멘토"
+                                errorMessage = "\(roleLabel) 계정이 아니에요. 올바른 로그인 방식을 선택해주세요"
                             }
                         }
                     }

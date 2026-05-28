@@ -212,6 +212,12 @@ struct MyPageView: View {
     }
 }
 
+#Preview {
+    MyPageView()
+        .environmentObject(AuthViewModel())
+        .environmentObject(BookingStore())
+}
+
 struct SettingsRow: View {
     let title: String
 

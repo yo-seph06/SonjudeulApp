@@ -137,6 +137,14 @@ struct BookingCompleteView: View {
     }
 }
 
+#Preview {
+    let vm = BookingViewModel()
+    vm.parentName = "홍길순"
+    return BookingCompleteView(bookingVM: vm)
+        .environmentObject(BookingStore())
+        .environmentObject(AuthViewModel())
+}
+
 struct SummaryRow: View {
     let label: String
     let value: String

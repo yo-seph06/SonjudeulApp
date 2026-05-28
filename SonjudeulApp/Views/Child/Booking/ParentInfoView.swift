@@ -111,6 +111,10 @@ struct ParentInfoView: View {
     }
 }
 
+#Preview {
+    ParentInfoView(bookingVM: BookingViewModel())
+}
+
 struct BookingTextField: View {
     let placeholder: String
     @Binding var text: String

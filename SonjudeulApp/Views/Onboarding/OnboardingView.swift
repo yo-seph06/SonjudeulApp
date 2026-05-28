@@ -79,6 +79,11 @@ struct OnboardingView: View {
     }
 }
 
+#Preview {
+    OnboardingView()
+        .environmentObject(AuthViewModel())
+}
+
 struct OnboardingPageView: View {
     let page: OnboardingPage
 

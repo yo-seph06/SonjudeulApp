@@ -42,6 +42,10 @@ struct PlanSelectView: View {
 
 // MARK: — Illustrated Card
 
+#Preview {
+    PlanSelectView(bookingVM: BookingViewModel())
+}
+
 struct IllustratedPlanCard: View {
     let plan: PlanType
     let isSelected: Bool

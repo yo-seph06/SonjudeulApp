@@ -87,6 +87,11 @@ struct RoleSelectView: View {
     }
 }
 
+#Preview {
+    RoleSelectView()
+        .environmentObject(AuthViewModel())
+}
+
 struct RoleCard: View {
     let icon: String
     let title: String

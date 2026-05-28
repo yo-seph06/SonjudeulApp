@@ -1,5 +1,27 @@
 import SwiftUI
 
+#Preview("멘토 홈") {
+    MentorHomeView()
+        .environmentObject(AuthViewModel())
+        .environmentObject(BookingStore())
+}
+
+#Preview("멘토 일정") {
+    NavigationStack {
+        MentorScheduleView()
+            .environmentObject(BookingStore())
+            .environmentObject(AuthViewModel())
+            .environmentObject(ReportViewModel())
+            .environmentObject(ReportStore())
+    }
+}
+
+#Preview("자녀 리뷰") {
+    MentorChildReviewsView()
+        .environmentObject(AuthViewModel())
+        .environmentObject(BookingStore())
+}
+
 struct MentorTabView: View {
     @EnvironmentObject var auth: AuthViewModel
     @StateObject var reportVM = ReportViewModel()

@@ -53,6 +53,14 @@ struct ReportListView: View {
     }
 }
 
+#Preview {
+    let store = ReportStore()
+    MockData.reports.forEach { store.add($0) }
+    return ReportListView()
+        .environmentObject(store)
+        .environmentObject(AuthViewModel())
+}
+
 struct ReportListCard: View {
     let report: Report
 

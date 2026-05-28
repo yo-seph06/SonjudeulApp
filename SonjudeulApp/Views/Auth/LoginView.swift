@@ -1,5 +1,12 @@
 import SwiftUI
 
+#Preview {
+    NavigationStack {
+        LoginView(role: .child)
+            .environmentObject(AuthViewModel())
+    }
+}
+
 struct LoginView: View {
     let role: UserRole
     @EnvironmentObject var auth: AuthViewModel

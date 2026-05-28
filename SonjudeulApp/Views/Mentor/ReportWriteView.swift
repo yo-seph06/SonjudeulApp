@@ -210,6 +210,18 @@ struct ReportWriteView: View {
     }
 }
 
+#Preview {
+    let booking = BookingRecord(date: "2025년 5월 28일", rawDate: Date(),
+                                plan: "원데이 효도", status: "방문 완료")
+    return NavigationStack {
+        ReportWriteView(booking: booking)
+            .environmentObject(ReportStore())
+            .environmentObject(BookingStore())
+            .environmentObject(AuthViewModel())
+            .environmentObject(ReportViewModel())
+    }
+}
+
 struct PhotoSlot: View {
     let index: Int
     @State private var hasPhoto = false

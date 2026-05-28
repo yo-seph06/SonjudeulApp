@@ -97,6 +97,11 @@ struct BookingHistoryView: View {
     }
 }
 
+#Preview {
+    BookingHistoryView()
+        .environmentObject(BookingStore())
+}
+
 struct BookingCard: View {
     let item: BookingRecord
     @State private var showProfile = false

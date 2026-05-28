@@ -94,6 +94,12 @@ struct HomeView: View {
 
 // MARK: — Illustration
 
+#Preview {
+    HomeView()
+        .environmentObject(AuthViewModel())
+        .environmentObject(BookingStore())
+}
+
 struct HomeIllustrationCard: View {
     var body: some View {
         ZStack {

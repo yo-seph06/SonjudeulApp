@@ -153,6 +153,16 @@ struct ProfileEditView: View {
     }
 }
 
+#Preview {
+    let user = User(name: "김자녀", username: "child1", email: "child@test.com",
+                    password: "test123", phone: "01012345678",
+                    role: .child, birthDate: Date(), gender: .female)
+    return NavigationStack {
+        ProfileEditView(user: user)
+            .environmentObject(AuthViewModel())
+    }
+}
+
 private struct EditField: View {
     let label: String
     let placeholder: String

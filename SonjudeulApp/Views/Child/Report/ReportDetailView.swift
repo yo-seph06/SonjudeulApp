@@ -224,6 +224,12 @@ struct ReportDetailView: View {
     }
 }
 
+#Preview {
+    NavigationStack {
+        ReportDetailView(report: MockData.reports[0])
+    }
+}
+
 struct ReportCheckRow: View {
     let icon: String
     let bgColor: Color

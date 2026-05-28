@@ -376,6 +376,13 @@ struct SignUpView: View {
     }
 }
 
+#Preview {
+    NavigationStack {
+        SignUpView()
+            .environmentObject(AuthViewModel())
+    }
+}
+
 // MARK: - 공통 컴포넌트
 
 private struct FieldLabel: View {

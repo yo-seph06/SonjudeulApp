@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import UserNotifications
 
-struct BookingRecord: Identifiable {
+struct BookingRecord: Identifiable, Codable {
     var id = UUID()
     let date: String
     let rawDate: Date
@@ -27,13 +27,38 @@ struct BookingRecord: Identifiable {
 class BookingStore: ObservableObject {
     @Published var bookings: [BookingRecord] = []
 
+    private var fileURL: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("sonjudeul_bookings.json")
+    }
+
+    init() { load() }
+
+    private func save() {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(bookings) {
+            try? data.write(to: fileURL, options: .atomic)
+        }
+    }
+
+    private func load() {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let data = try? Data(contentsOf: fileURL),
+              let decoded = try? decoder.decode([BookingRecord].self, from: data) else { return }
+        bookings = decoded
+    }
+
     func add(_ record: BookingRecord) {
         bookings.insert(record, at: 0)
+        save()
     }
 
     func markVisited(id: UUID) {
         if let idx = bookings.firstIndex(where: { $0.id == id }) {
             bookings[idx].status = "방문 완료"
+            save()
             scheduleVisitCompleteNotification()
         }
     }
@@ -41,6 +66,7 @@ class BookingStore: ObservableObject {
     func markReportWritten(id: UUID) {
         if let idx = bookings.firstIndex(where: { $0.id == id }) {
             bookings[idx].reportWritten = true
+            save()
         }
     }
 
@@ -49,6 +75,7 @@ class BookingStore: ObservableObject {
             bookings[idx].status = "예약 확정"
             bookings[idx].mentorId = mentorId
             bookings[idx].mentorName = mentorName
+            save()
             scheduleMentorMatchedNotification(mentorName: mentorName)
         }
     }
@@ -57,6 +84,7 @@ class BookingStore: ObservableObject {
         if let idx = bookings.firstIndex(where: { $0.id == id }) {
             bookings[idx].rating = rating
             bookings[idx].reviewComment = comment
+            save()
         }
     }
 

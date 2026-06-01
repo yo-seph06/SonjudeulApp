@@ -77,6 +77,7 @@ class BookingStore: ObservableObject {
             bookings[idx].mentorName = mentorName
             save()
             scheduleMentorMatchedNotification(mentorName: mentorName)
+            scheduleOneHourBeforeNotification(booking: bookings[idx])
         }
     }
 
@@ -150,6 +151,24 @@ class BookingStore: ObservableObject {
     }
 
     // MARK: - Notifications
+
+    private func scheduleOneHourBeforeNotification(booking: BookingRecord) {
+        let fireDate = booking.rawDate.addingTimeInterval(-3600)
+        guard fireDate > Date() else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "1시간 후 방문 예정 🔔"
+        content.body = "\(booking.mentorName.isEmpty ? "멘토" : booking.mentorName) 방문이 1시간 후예요! 준비해주세요."
+        content.sound = .default
+
+        let components = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute], from: fireDate
+        )
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "visit-1h-\(booking.id.uuidString)", content: content, trigger: trigger)
+        )
+    }
 
     private func scheduleMentorMatchedNotification(mentorName: String) {
         let content = UNMutableNotificationContent()

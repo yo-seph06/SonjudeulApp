@@ -13,21 +13,27 @@ struct ChildTabView: View {
 
             BookingHistoryView()
                 .tabItem {
-                    Label("예약내역", systemImage: "calendar")
+                    Label("예약내역", systemImage: "list.bullet")
                 }
                 .tag(1)
+
+            CalendarView()
+                .tabItem {
+                    Label("캘린더", systemImage: "calendar")
+                }
+                .tag(2)
 
             ReportListView()
                 .tabItem {
                     Label("리포트", systemImage: "doc.richtext.fill")
                 }
-                .tag(2)
+                .tag(3)
 
             MyPageView()
                 .tabItem {
                     Label("마이", systemImage: "person.fill")
                 }
-                .tag(3)
+                .tag(4)
         }
         .tint(.sonjuPrimary)
     }

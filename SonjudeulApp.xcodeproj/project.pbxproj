@@ -50,6 +50,7 @@
 		B042 /* ReportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A042 /* ReportStore.swift */; };
 		B043 /* MentorRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A043 /* MentorRatingView.swift */; };
 		B044 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A044 /* ProfileEditView.swift */; };
+		CAL2 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAL1 /* CalendarView.swift */; };
 		B045 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A045 /* ShareSheet.swift */; };
 		RASSETS /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FASSETS /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -99,6 +100,7 @@
 		A042 /* ReportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportStore.swift; sourceTree = "<group>"; };
 		A043 /* MentorRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorRatingView.swift; sourceTree = "<group>"; };
 		A044 /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
+		CAL1 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		A045 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		FASSETS /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		PROD /* SonjudeulApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SonjudeulApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -255,6 +257,7 @@
 				GRP_CHILD /* Child */,
 				GRP_MENTOR /* Mentor */,
 				A044 /* ProfileEditView.swift */,
+				CAL1 /* CalendarView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -396,6 +399,7 @@
 				B042 /* ReportStore.swift in Sources */,
 				B043 /* MentorRatingView.swift in Sources */,
 				B044 /* ProfileEditView.swift in Sources */,
+				CAL2 /* CalendarView.swift in Sources */,
 				B045 /* ShareSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

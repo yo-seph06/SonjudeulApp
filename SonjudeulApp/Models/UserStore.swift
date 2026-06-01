@@ -2,7 +2,12 @@ import Foundation
 
 class UserStore {
     static let shared = UserStore()
-    private let key = "registeredUsers"
+    private let fileName = "sonjudeul_users.json"
+
+    private var fileURL: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(fileName)
+    }
 
     private(set) var users: [User] = []
 
@@ -13,7 +18,6 @@ class UserStore {
         save()
     }
 
-    /// 이메일 또는 아이디 + 비밀번호로 사용자 검색
     func findUser(identifier: String, password: String) -> User? {
         let id = identifier.lowercased()
         return users.first {
@@ -42,14 +46,18 @@ class UserStore {
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(users) {
-            UserDefaults.standard.set(data, forKey: key)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(users) {
+            try? data.write(to: fileURL, options: .atomic)
         }
     }
 
     private func load() {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode([User].self, from: data) else { return }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let data = try? Data(contentsOf: fileURL),
+              let decoded = try? decoder.decode([User].self, from: data) else { return }
         users = decoded
     }
 }

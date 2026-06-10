@@ -24,7 +24,6 @@ import SwiftUI
 
 struct MentorTabView: View {
     @EnvironmentObject var auth: AuthViewModel
-    @EnvironmentObject var scheduleStore: ScheduleStore
     @StateObject var reportVM = ReportViewModel()
     @State private var selectedTab = 0
 
@@ -38,18 +37,13 @@ struct MentorTabView: View {
                 .tabItem { Label("방문 일정", systemImage: "calendar") }
                 .tag(1)
 
-            ScheduleCalendarView()
-                .environmentObject(scheduleStore)
-                .tabItem { Label("내 일정", systemImage: "clock.badge.checkmark.fill") }
-                .tag(2)
-
             MentorChildReviewsView()
                 .tabItem { Label("자녀 리뷰", systemImage: "quote.bubble.fill") }
-                .tag(3)
+                .tag(2)
 
             MentorMyPageView()
                 .tabItem { Label("마이페이지", systemImage: "person.fill") }
-                .tag(4)
+                .tag(3)
         }
         .tint(.sonjuPrimary)
         .environmentObject(reportVM)

@@ -19,29 +19,23 @@ struct ChildTabView: View {
                 .tag(1)
 
             CalendarView()
+                .environmentObject(scheduleStore)
                 .tabItem {
                     Label("캘린더", systemImage: "calendar")
                 }
                 .tag(2)
 
-            ScheduleCalendarView()
-                .environmentObject(scheduleStore)
-                .tabItem {
-                    Label("내 일정", systemImage: "clock.badge.checkmark.fill")
-                }
-                .tag(3)
-
             ReportListView()
                 .tabItem {
                     Label("리포트", systemImage: "doc.richtext.fill")
                 }
-                .tag(4)
+                .tag(3)
 
             MyPageView()
                 .tabItem {
                     Label("마이", systemImage: "person.fill")
                 }
-                .tag(5)
+                .tag(4)
         }
         .tint(.sonjuPrimary)
     }

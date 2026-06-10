@@ -3,8 +3,10 @@ import SwiftUI
 struct CalendarView: View {
     @EnvironmentObject var bookingStore: BookingStore
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var scheduleStore: ScheduleStore
     @State private var currentMonth = Date()
     @State private var selectedDate: Date? = nil
+    @State private var showAddSheet = false
 
     private let cal = Calendar.current
     private let weekDays = ["일", "월", "화", "수", "목", "금", "토"]
@@ -39,6 +41,11 @@ struct CalendarView: View {
 
     private func bookingsOn(_ date: Date) -> [BookingRecord] {
         myBookings.filter { cal.isDate($0.rawDate, inSameDayAs: date) }
+    }
+
+    private func dotCount(for date: Date) -> Int {
+        let total = bookingsOn(date).count + scheduleStore.eventsOn(date).count
+        return min(total, 3)
     }
 
     private var upcomingBookings: [BookingRecord] {
@@ -88,7 +95,6 @@ struct CalendarView: View {
                         // 달력 그리드
                         SonjuCard {
                             VStack(spacing: 4) {
-                                // 요일 헤더
                                 HStack(spacing: 0) {
                                     ForEach(Array(weekDays.enumerated()), id: \.offset) { i, day in
                                         Text(day)
@@ -101,7 +107,6 @@ struct CalendarView: View {
 
                                 Divider().background(Color.sonjuDivider)
 
-                                // 날짜 그리드
                                 let days = daysInMonth
                                 let rows = Int(ceil(Double(days.count) / 7.0))
                                 ForEach(0..<rows, id: \.self) { row in
@@ -113,7 +118,7 @@ struct CalendarView: View {
                                                     date: date,
                                                     isSelected: selectedDate.map { cal.isDate($0, inSameDayAs: date) } ?? false,
                                                     isToday: cal.isDateInToday(date),
-                                                    dotCount: min(bookingsOn(date).count, 3),
+                                                    dotCount: dotCount(for: date),
                                                     weekday: col
                                                 ) { selectedDate = (selectedDate.map { cal.isDate($0, inSameDayAs: date) } ?? false) ? nil : date }
                                             } else {
@@ -126,30 +131,46 @@ struct CalendarView: View {
                         }
                         .padding(.horizontal, 24)
 
-                        // 선택된 날짜 예약
+                        // 선택된 날짜 항목
                         if let selected = selectedDate {
-                            let bookings = bookingsOn(selected)
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(formatDate(selected))
-                                    .font(.sonjuHeadline)
-                                    .foregroundColor(.sonjuText)
-                                    .padding(.horizontal, 24)
+                            let dayBookings = bookingsOn(selected)
+                            let dayEvents = scheduleStore.eventsOn(selected)
 
-                                if bookings.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Text(formatDate(selected))
+                                        .font(.sonjuHeadline)
+                                        .foregroundColor(.sonjuText)
+                                    Spacer()
+                                    Button {
+                                        showAddSheet = true
+                                    } label: {
+                                        Label("일정 추가", systemImage: "plus.circle.fill")
+                                            .font(.sonjuCaption)
+                                            .foregroundColor(.sonjuPrimary)
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+
+                                if dayBookings.isEmpty && dayEvents.isEmpty {
                                     SonjuCard {
                                         HStack(spacing: 12) {
                                             Image(systemName: "calendar.badge.exclamationmark")
                                                 .font(.system(size: 26))
                                                 .foregroundColor(.sonjuPrimary.opacity(0.4))
-                                            Text("이 날 예약이 없어요")
+                                            Text("이 날 일정이 없어요")
                                                 .font(.sonjuBody)
                                                 .foregroundColor(.sonjuSecondary)
                                         }
                                     }
                                     .padding(.horizontal, 24)
                                 } else {
-                                    ForEach(bookings) { booking in
+                                    ForEach(dayBookings) { booking in
                                         CalBookingCard(booking: booking)
+                                            .padding(.horizontal, 24)
+                                    }
+                                    ForEach(dayEvents) { event in
+                                        ScheduleEventCard(event: event)
                                             .padding(.horizontal, 24)
                                     }
                                 }
@@ -171,6 +192,22 @@ struct CalendarView: View {
                             }
                         }
 
+                        // 다가오는 내 일정
+                        let upcoming = scheduleStore.upcomingEvents
+                        if !upcoming.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("다가오는 일정")
+                                    .font(.sonjuHeadline)
+                                    .foregroundColor(.sonjuText)
+                                    .padding(.horizontal, 24)
+
+                                ForEach(upcoming.prefix(5)) { event in
+                                    ScheduleEventCard(event: event)
+                                        .padding(.horizontal, 24)
+                                }
+                            }
+                        }
+
                         Color.clear.frame(height: 20)
                     }
                     .padding(.top, 8)
@@ -178,6 +215,21 @@ struct CalendarView: View {
             }
             .navigationTitle("캘린더")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showAddSheet = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.sonjuPrimary)
+                    }
+                }
+            }
+            .sheet(isPresented: $showAddSheet) {
+                ScheduleAddView(initialDate: selectedDate ?? Date())
+                    .environmentObject(scheduleStore)
+            }
         }
     }
 
@@ -226,7 +278,6 @@ struct CalDayCell: View {
                         .foregroundColor(isSelected ? .white : textColor)
                 }
 
-                // 예약 점
                 HStack(spacing: 3) {
                     ForEach(0..<dotCount, id: \.self) { _ in
                         Circle()
@@ -298,4 +349,5 @@ struct CalBookingCard: View {
     CalendarView()
         .environmentObject(BookingStore())
         .environmentObject(AuthViewModel())
+        .environmentObject(ScheduleStore())
 }

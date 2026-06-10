@@ -6,6 +6,7 @@ struct SonjudeulApp: App {
     @StateObject var auth = AuthViewModel()
     @StateObject var bookingStore = BookingStore()
     @StateObject var reportStore = ReportStore()
+    @StateObject var scheduleStore = ScheduleStore()
     @State private var showSplash = true
 
     var body: some Scene {
@@ -15,6 +16,7 @@ struct SonjudeulApp: App {
                     .environmentObject(auth)
                     .environmentObject(bookingStore)
                     .environmentObject(reportStore)
+                    .environmentObject(scheduleStore)
                     .opacity(showSplash ? 0 : 1)
 
                 if showSplash {

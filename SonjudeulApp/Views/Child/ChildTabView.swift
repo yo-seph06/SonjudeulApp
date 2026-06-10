@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ChildTabView: View {
+    @EnvironmentObject var scheduleStore: ScheduleStore
     @State private var selectedTab = 0
 
     var body: some View {
@@ -23,17 +24,24 @@ struct ChildTabView: View {
                 }
                 .tag(2)
 
+            ScheduleCalendarView()
+                .environmentObject(scheduleStore)
+                .tabItem {
+                    Label("내 일정", systemImage: "clock.badge.checkmark.fill")
+                }
+                .tag(3)
+
             ReportListView()
                 .tabItem {
                     Label("리포트", systemImage: "doc.richtext.fill")
                 }
-                .tag(3)
+                .tag(4)
 
             MyPageView()
                 .tabItem {
                     Label("마이", systemImage: "person.fill")
                 }
-                .tag(4)
+                .tag(5)
         }
         .tint(.sonjuPrimary)
     }

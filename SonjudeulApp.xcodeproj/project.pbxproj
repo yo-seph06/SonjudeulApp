@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		036A07E407E583BB5D0446C2 /* ScheduleEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 980A32C637F4D7A57225BC96 /* ScheduleEvent.swift */; };
+		26FB34ECF30DA5AE310BD33C /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CEB07BF0D2F6E9ECD0CBAD /* ScheduleStore.swift */; };
 		B001 /* SonjudeulApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A001 /* SonjudeulApp.swift */; };
 		B002 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002 /* User.swift */; };
 		B003 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003 /* Report.swift */; };
@@ -50,13 +52,18 @@
 		B042 /* ReportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A042 /* ReportStore.swift */; };
 		B043 /* MentorRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A043 /* MentorRatingView.swift */; };
 		B044 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A044 /* ProfileEditView.swift */; };
-		CAL2 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAL1 /* CalendarView.swift */; };
 		B045 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A045 /* ShareSheet.swift */; };
+		BCBFBFB7AF2F65E623A0E99F /* ScheduleCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */; };
+		CAA60D0C8DADBCE9EB728BCE /* ScheduleAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */; };
+		CAL2 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAL1 /* CalendarView.swift */; };
 		RASSETS /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FASSETS /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		31CEB07BF0D2F6E9ECD0CBAD /* ScheduleStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleStore.swift; sourceTree = "<group>"; };
+		4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleCalendarView.swift; sourceTree = "<group>"; };
 		81C1DAD22FADF04300365857 /* SonjudeulApp.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = SonjudeulApp.xcodeproj; sourceTree = SOURCE_ROOT; };
+		980A32C637F4D7A57225BC96 /* ScheduleEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleEvent.swift; sourceTree = "<group>"; };
 		A001 /* SonjudeulApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonjudeulApp.swift; sourceTree = "<group>"; };
 		A002 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		A003 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
@@ -100,8 +107,9 @@
 		A042 /* ReportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportStore.swift; sourceTree = "<group>"; };
 		A043 /* MentorRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorRatingView.swift; sourceTree = "<group>"; };
 		A044 /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
-		CAL1 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		A045 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		CAL1 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleAddView.swift; sourceTree = "<group>"; };
 		FASSETS /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		PROD /* SonjudeulApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SonjudeulApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -119,6 +127,8 @@
 /* Begin PBXGroup section */
 		81702D3D2FADF13A009CFB5D /* Products */ = {
 			isa = PBXGroup;
+			children = (
+			);
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -210,6 +220,8 @@
 				A035 /* UserStore.swift */,
 				A040 /* BookingStore.swift */,
 				A042 /* ReportStore.swift */,
+				980A32C637F4D7A57225BC96 /* ScheduleEvent.swift */,
+				31CEB07BF0D2F6E9ECD0CBAD /* ScheduleStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -258,6 +270,8 @@
 				GRP_MENTOR /* Mentor */,
 				A044 /* ProfileEditView.swift */,
 				CAL1 /* CalendarView.swift */,
+				4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */,
+				EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -401,6 +415,10 @@
 				B044 /* ProfileEditView.swift in Sources */,
 				CAL2 /* CalendarView.swift in Sources */,
 				B045 /* ShareSheet.swift in Sources */,
+				036A07E407E583BB5D0446C2 /* ScheduleEvent.swift in Sources */,
+				26FB34ECF30DA5AE310BD33C /* ScheduleStore.swift in Sources */,
+				BCBFBFB7AF2F65E623A0E99F /* ScheduleCalendarView.swift in Sources */,
+				CAA60D0C8DADBCE9EB728BCE /* ScheduleAddView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -556,14 +556,67 @@ struct MentorMyPageView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .top) {
+            ZStack {
                 Color.sonjuBackground.ignoresSafeArea()
 
-                // Scrollable content
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        // Spacer to push below gradient header
-                        Color.clear.frame(height: 230)
+                        // 프로필 카드
+                        SonjuCard {
+                            HStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.sonjuPrimary.opacity(0.15))
+                                        .frame(width: 64, height: 64)
+                                    Circle()
+                                        .stroke(Color.sonjuPrimary.opacity(0.3), lineWidth: 2)
+                                        .frame(width: 64, height: 64)
+                                    if let data = auth.currentUser?.profileImageData,
+                                       let img = UIImage(data: data) {
+                                        Image(uiImage: img)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 60, height: 60)
+                                            .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "person.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 26, height: 26)
+                                            .foregroundColor(.sonjuPrimary)
+                                    }
+                                }
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(auth.currentUser?.name ?? "멘토")
+                                        .font(.sonjuTitle)
+                                        .foregroundColor(.sonjuText)
+                                    Text(auth.currentUser?.university ?? "대학생 멘토")
+                                        .font(.sonjuCaption)
+                                        .foregroundColor(.sonjuSecondary)
+                                    StarRatingView(rating: {
+                                        guard let id = auth.currentUser?.id else { return 5.0 }
+                                        return bookingStore.averageRating(forMentor: id)
+                                    }())
+                                }
+                                Spacer()
+                                VStack(spacing: 8) {
+                                    BadgeView(text: "활동중", color: .sonjuSuccess)
+                                    if let user = auth.currentUser {
+                                        NavigationLink(destination: ProfileEditView(user: user)) {
+                                            Text("수정")
+                                                .font(.sonjuCaption)
+                                                .foregroundColor(.sonjuPrimary)
+                                                .padding(.horizontal, 14)
+                                                .padding(.vertical, 7)
+                                                .background(Color.sonjuPrimary.opacity(0.1))
+                                                .cornerRadius(20)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 24)
 
                         // 수익 현황
                         SonjuCard {
@@ -762,12 +815,11 @@ struct MentorMyPageView: View {
                         .padding(.horizontal, 24)
                         .padding(.bottom, 32)
                     }
+                    .padding(.top, 16)
                 }
-
-                // Fixed gradient header
-                MentorMyPageGradientHeader(auth: auth, bookingStore: bookingStore)
             }
-            .navigationBarHidden(true)
+            .navigationTitle("마이페이지")
+            .navigationBarTitleDisplayMode(.large)
             .alert("로그아웃", isPresented: $showLogoutAlert) {
                 Button("취소", role: .cancel) {}
                 Button("로그아웃", role: .destructive) {

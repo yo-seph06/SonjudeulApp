@@ -11,11 +11,26 @@ struct HomeView: View {
                 Color.sonjuBackground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Personalized greeting banner
-                    HomeGreetingBanner(
-                        name: auth.currentUser?.name ?? "",
-                        nextBooking: bookingStore.nextBooking
-                    )
+                    // 상단 로고 바
+                    HStack {
+                        HStack(spacing: 8) {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(.sonjuPrimary)
+                                .font(.system(size: 20))
+                            Text("손주들")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.sonjuText)
+                        }
+                        Spacer()
+                        Button {} label: {
+                            Image(systemName: "bell")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.sonjuText)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
 
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 28) {

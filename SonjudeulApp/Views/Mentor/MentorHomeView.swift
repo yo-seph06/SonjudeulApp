@@ -87,20 +87,13 @@ struct MentorHomeView: View {
             ZStack {
                 Color.sonjuBackground.ignoresSafeArea()
 
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        // Header
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("안녕하세요, \(auth.currentUser?.name ?? "멘토") 님 👋")
-                                .font(.sonjuTitle)
-                                .foregroundColor(.sonjuText)
-                            Text("오늘도 좋은 하루 되세요!")
-                                .font(.sonjuBody)
-                                .foregroundColor(.sonjuSecondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 16)
+                        // Personalized greeting banner
+                        MentorGreetingBanner(
+                            name: auth.currentUser?.name ?? "멘토",
+                            ratingText: ratingText
+                        )
 
                         // Today's visit card
                         TodayVisitCard(booking: myTodayBooking)
@@ -108,27 +101,36 @@ struct MentorHomeView: View {
 
                         // Monthly stats
                         SonjuCard {
-                            VStack(alignment: .leading, spacing: 14) {
-                                Text("이번 달 현황")
-                                    .font(.sonjuHeadline)
-                                    .foregroundColor(.sonjuText)
+                            VStack(alignment: .leading, spacing: 0) {
+                                // Colored accent bar at top
+                                Rectangle()
+                                    .fill(Color.sonjuPrimary)
+                                    .frame(height: 4)
+                                    .cornerRadius(2)
+                                    .padding(.bottom, 14)
 
-                                HStack {
-                                    StatItem(label: "방문 횟수", value: "\(monthlyCount)회")
-                                    Divider().frame(height: 40)
-                                    StatItem(label: "예상 수익", value: monthlyEarnings)
-                                    Divider().frame(height: 40)
-                                    StatItem(label: "평점", value: ratingText)
-                                }
+                                VStack(alignment: .leading, spacing: 14) {
+                                    Text("이번 달 현황")
+                                        .font(.sonjuHeadline)
+                                        .foregroundColor(.sonjuText)
 
-                                if monthlyCount == 0 {
-                                    Divider().background(Color.sonjuDivider)
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "info.circle")
-                                            .foregroundColor(.sonjuSecondary)
-                                        Text("이번 달 완료된 방문이 없어요")
-                                            .font(.sonjuCaption)
-                                            .foregroundColor(.sonjuSecondary)
+                                    HStack {
+                                        StatItem(label: "방문 횟수", value: "\(monthlyCount)회")
+                                        Divider().frame(height: 40)
+                                        StatItem(label: "예상 수익", value: monthlyEarnings)
+                                        Divider().frame(height: 40)
+                                        StatItem(label: "평점", value: ratingText)
+                                    }
+
+                                    if monthlyCount == 0 {
+                                        Divider().background(Color.sonjuDivider)
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "info.circle")
+                                                .foregroundColor(.sonjuSecondary)
+                                            Text("이번 달 완료된 방문이 없어요")
+                                                .font(.sonjuCaption)
+                                                .foregroundColor(.sonjuSecondary)
+                                        }
                                     }
                                 }
                             }
@@ -138,9 +140,93 @@ struct MentorHomeView: View {
                     }
                 }
             }
-            .navigationTitle("홈")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
         }
+    }
+}
+
+// MARK: - Mentor Greeting Banner
+
+struct MentorGreetingBanner: View {
+    let name: String
+    let ratingText: String
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(hex: "#FFF8ED"), Color(hex: "#FFE4B2")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .clipShape(MentorRoundedCorner(radius: 28, corners: [.bottomLeft, .bottomRight]))
+            .shadow(color: Color.sonjuPrimary.opacity(0.12), radius: 8, x: 0, y: 4)
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Top row: title + bell
+                HStack {
+                    Text("멘토 홈")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.sonjuText)
+                    Spacer()
+                    Button {} label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white.opacity(0.7))
+                                .frame(width: 38, height: 38)
+                            Image(systemName: "bell.fill")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.sonjuDeep)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 14)
+
+                // Greeting text + rating badge
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("안녕하세요, \(name)님! 👋")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(.sonjuText)
+                        Text("오늘도 최고의 멘토가 되어주세요")
+                            .font(.sonjuBody)
+                            .foregroundColor(.sonjuSecondary)
+                    }
+                    Spacer()
+                    // Star rating badge
+                    Text(ratingText)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.sonjuDeep)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.white.opacity(0.75))
+                        .cornerRadius(16)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.sonjuPrimary.opacity(0.3), lineWidth: 1)
+                        )
+                        .padding(.top, 4)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 14)
+                .padding(.bottom, 20)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+struct MentorRoundedCorner: Shape {
+    var radius: CGFloat
+    var corners: UIRectCorner
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
     }
 }
 
@@ -470,64 +556,14 @@ struct MentorMyPageView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .top) {
                 Color.sonjuBackground.ignoresSafeArea()
 
-                ScrollView {
+                // Scrollable content
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        // 프로필 카드
-                        SonjuCard {
-                            HStack(spacing: 16) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.sonjuPrimary.opacity(0.2))
-                                        .frame(width: 64, height: 64)
-                                    if let data = auth.currentUser?.profileImageData,
-                                       let img = UIImage(data: data) {
-                                        Image(uiImage: img)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 64, height: 64)
-                                            .clipShape(Circle())
-                                    } else {
-                                        Image(systemName: "person.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 28, height: 28)
-                                            .foregroundColor(.sonjuPrimary)
-                                    }
-                                }
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(auth.currentUser?.name ?? "멘토")
-                                        .font(.sonjuTitle)
-                                        .foregroundColor(.sonjuText)
-                                    Text(auth.currentUser?.university ?? "대학생 멘토")
-                                        .font(.sonjuCaption)
-                                        .foregroundColor(.sonjuSecondary)
-                                    StarRatingView(rating: {
-                                        guard let id = auth.currentUser?.id else { return 5.0 }
-                                        return bookingStore.averageRating(forMentor: id)
-                                    }())
-                                }
-                                Spacer()
-                                VStack(spacing: 8) {
-                                    BadgeView(text: "활동중", color: .sonjuSuccess)
-                                    if let user = auth.currentUser {
-                                        NavigationLink(destination: ProfileEditView(user: user)) {
-                                            Text("수정")
-                                                .font(.sonjuCaption)
-                                                .foregroundColor(.sonjuPrimary)
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 6)
-                                                .background(Color.sonjuPrimary.opacity(0.1))
-                                                .cornerRadius(20)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 24)
+                        // Spacer to push below gradient header
+                        Color.clear.frame(height: 230)
 
                         // 수익 현황
                         SonjuCard {
@@ -650,21 +686,41 @@ struct MentorMyPageView: View {
                         SonjuCard {
                             VStack(spacing: 0) {
                                 Toggle(isOn: $pushEnabled) {
-                                    Label("푸시 알림 설정", systemImage: "bell.fill")
-                                        .font(.sonjuBody)
-                                        .foregroundColor(.sonjuText)
+                                    HStack(spacing: 10) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color.sonjuPrimary.opacity(0.15))
+                                                .frame(width: 32, height: 32)
+                                            Image(systemName: "bell.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.sonjuPrimary)
+                                        }
+                                        Text("푸시 알림 설정")
+                                            .font(.sonjuBody)
+                                            .foregroundColor(.sonjuText)
+                                    }
                                 }
                                 .tint(.sonjuPrimary)
                                 .padding(.vertical, 12)
 
                                 Divider().background(Color.sonjuDivider)
                                 NavigationLink(destination: PrivacyConsentView()) {
-                                    MentorSettingsRow(title: "개인정보 처리방침")
+                                    ColoredMentorSettingsRow(
+                                        title: "개인정보 처리방침",
+                                        icon: "lock.shield.fill",
+                                        iconBg: Color(hex: "#E3F0FF"),
+                                        iconColor: Color(hex: "#2196F3")
+                                    )
                                 }
                                 .buttonStyle(.plain)
                                 Divider().background(Color.sonjuDivider)
                                 NavigationLink(destination: TermsOfServiceView()) {
-                                    MentorSettingsRow(title: "서비스 이용약관")
+                                    ColoredMentorSettingsRow(
+                                        title: "서비스 이용약관",
+                                        icon: "doc.text.fill",
+                                        iconBg: Color(hex: "#F3E8FF"),
+                                        iconColor: Color(hex: "#9C27B0")
+                                    )
                                 }
                                 .buttonStyle(.plain)
                                 Divider().background(Color.sonjuDivider)
@@ -672,7 +728,15 @@ struct MentorMyPageView: View {
                                 Button {
                                     showLogoutAlert = true
                                 } label: {
-                                    HStack {
+                                    HStack(spacing: 10) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color.red.opacity(0.1))
+                                                .frame(width: 32, height: 32)
+                                            Image(systemName: "rectangle.portrait.and.arrow.right.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.red)
+                                        }
                                         Text("로그아웃")
                                             .font(.sonjuBody)
                                             .foregroundColor(.red)
@@ -698,11 +762,12 @@ struct MentorMyPageView: View {
                         .padding(.horizontal, 24)
                         .padding(.bottom, 32)
                     }
-                    .padding(.top, 16)
                 }
+
+                // Fixed gradient header
+                MentorMyPageGradientHeader(auth: auth, bookingStore: bookingStore)
             }
-            .navigationTitle("마이페이지")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarHidden(true)
             .alert("로그아웃", isPresented: $showLogoutAlert) {
                 Button("취소", role: .cancel) {}
                 Button("로그아웃", role: .destructive) {
@@ -712,6 +777,105 @@ struct MentorMyPageView: View {
                 Text("정말 로그아웃 하시겠어요?")
             }
         }
+    }
+}
+
+// MARK: - Mentor MyPage Gradient Header
+
+private struct MentorMyPageGradientHeader: View {
+    let auth: AuthViewModel
+    let bookingStore: BookingStore
+
+    private var avgRating: Double {
+        guard let id = auth.currentUser?.id else { return 5.0 }
+        return bookingStore.averageRating(forMentor: id)
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            LinearGradient(
+                colors: [Color.sonjuPrimary, Color.sonjuDeep],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .clipShape(MentorMyPageRoundedCorner(radius: 28, corners: [.bottomLeft, .bottomRight]))
+            .shadow(color: Color.sonjuDeep.opacity(0.35), radius: 10, x: 0, y: 6)
+            .frame(height: 240)
+
+            VStack(spacing: 10) {
+                // Profile photo
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.25))
+                        .frame(width: 86, height: 86)
+                    Circle()
+                        .stroke(Color.white, lineWidth: 3)
+                        .frame(width: 86, height: 86)
+                    if let data = auth.currentUser?.profileImageData,
+                       let img = UIImage(data: data) {
+                        Image(uiImage: img)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 36, height: 36)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                }
+
+                // Name, university, star rating
+                VStack(spacing: 4) {
+                    Text(auth.currentUser?.name ?? "멘토")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                    Text(auth.currentUser?.university ?? "대학생 멘토")
+                        .font(.sonjuCaption)
+                        .foregroundColor(.white.opacity(0.8))
+                    StarRatingView(rating: avgRating)
+                        .colorScheme(.dark)
+                }
+
+                // Active badge + Edit button
+                HStack(spacing: 10) {
+                    BadgeView(text: "활동중", color: .sonjuSuccess)
+                    if let user = auth.currentUser {
+                        NavigationLink(destination: ProfileEditView(user: user)) {
+                            Text("수정")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 6)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.bottom, 18)
+        }
+        .frame(height: 240)
+        .ignoresSafeArea(edges: .top)
+    }
+}
+
+struct MentorMyPageRoundedCorner: Shape {
+    var radius: CGFloat
+    var corners: UIRectCorner
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
     }
 }
 
@@ -879,6 +1043,34 @@ struct MentorSettingsRow: View {
 
     var body: some View {
         HStack {
+            Text(title)
+                .font(.sonjuBody)
+                .foregroundColor(.sonjuText)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .foregroundColor(.sonjuSecondary)
+                .font(.system(size: 12))
+        }
+        .padding(.vertical, 12)
+    }
+}
+
+struct ColoredMentorSettingsRow: View {
+    let title: String
+    let icon: String
+    let iconBg: Color
+    let iconColor: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(iconBg)
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(iconColor)
+            }
             Text(title)
                 .font(.sonjuBody)
                 .foregroundColor(.sonjuText)

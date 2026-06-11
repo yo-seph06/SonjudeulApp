@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		036A07E407E583BB5D0446C2 /* ScheduleEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 980A32C637F4D7A57225BC96 /* ScheduleEvent.swift */; };
 		26FB34ECF30DA5AE310BD33C /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CEB07BF0D2F6E9ECD0CBAD /* ScheduleStore.swift */; };
+		792E77FFFF2BC981EB6961CF /* BookingRequesterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BB991958041852510D3CA9 /* BookingRequesterProfileView.swift */; };
 		B001 /* SonjudeulApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A001 /* SonjudeulApp.swift */; };
 		B002 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002 /* User.swift */; };
 		B003 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003 /* Report.swift */; };
@@ -109,6 +110,7 @@
 		A044 /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
 		A045 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		CAL1 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		D5BB991958041852510D3CA9 /* BookingRequesterProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingRequesterProfileView.swift; sourceTree = "<group>"; };
 		EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleAddView.swift; sourceTree = "<group>"; };
 		FASSETS /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		PROD /* SonjudeulApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SonjudeulApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -205,6 +207,7 @@
 			children = (
 				A031 /* MentorHomeView.swift */,
 				A032 /* ReportWriteView.swift */,
+				D5BB991958041852510D3CA9 /* BookingRequesterProfileView.swift */,
 			);
 			path = Mentor;
 			sourceTree = "<group>";
@@ -419,6 +422,7 @@
 				26FB34ECF30DA5AE310BD33C /* ScheduleStore.swift in Sources */,
 				BCBFBFB7AF2F65E623A0E99F /* ScheduleCalendarView.swift in Sources */,
 				CAA60D0C8DADBCE9EB728BCE /* ScheduleAddView.swift in Sources */,
+				792E77FFFF2BC981EB6961CF /* BookingRequesterProfileView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

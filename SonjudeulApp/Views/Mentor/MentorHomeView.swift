@@ -214,8 +214,8 @@ struct MentorScheduleView: View {
     @EnvironmentObject var reportStore: ReportStore
     @State private var reportBooking: BookingRecord? = nil
     @State private var showCompleteAlert = false
-    @State private var showAcceptAlert = false
     @State private var pendingId: UUID? = nil
+    @State private var profileBooking: BookingRecord? = nil
 
     // 아직 멘토가 배정 안 된 신규 신청
     private var pendingRequests: [BookingRecord] {
@@ -299,10 +299,9 @@ struct MentorScheduleView: View {
                                                         .cornerRadius(20)
                                                 }
                                                 Button {
-                                                    pendingId = booking.id
-                                                    showAcceptAlert = true
+                                                    profileBooking = booking
                                                 } label: {
-                                                    Label("수락하기", systemImage: "checkmark.circle.fill")
+                                                    Label("신청자 프로필 보기", systemImage: "person.crop.circle.badge.checkmark")
                                                         .font(.sonjuHeadline)
                                                         .foregroundColor(.white)
                                                         .frame(maxWidth: .infinity)
@@ -410,17 +409,10 @@ struct MentorScheduleView: View {
             }
             .navigationTitle("방문 일정")
             .navigationBarTitleDisplayMode(.large)
-            .alert("신청 수락", isPresented: $showAcceptAlert) {
-                Button("취소", role: .cancel) {}
-                Button("수락") {
-                    if let id = pendingId,
-                       let mentorId = auth.currentUser?.id,
-                       let mentorName = auth.currentUser?.name {
-                        bookingStore.acceptBooking(id: id, mentorId: mentorId, mentorName: mentorName)
-                    }
-                }
-            } message: {
-                Text("이 예약 신청을 수락하시겠어요?\n수락 시 자녀분께 매칭 알림이 전송됩니다.")
+            .sheet(item: $profileBooking) { booking in
+                BookingRequesterProfileView(booking: booking)
+                    .environmentObject(auth)
+                    .environmentObject(bookingStore)
             }
             .alert("방문 완료 처리", isPresented: $showCompleteAlert) {
                 Button("취소", role: .cancel) {}

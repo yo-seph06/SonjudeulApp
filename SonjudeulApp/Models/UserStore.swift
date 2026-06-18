@@ -38,6 +38,27 @@ class UserStore {
         users.first { $0.id == id }
     }
 
+    func findUserByNameAndPhone(name: String, phone: String) -> User? {
+        users.first {
+            $0.name == name && $0.phone.replacingOccurrences(of: "-", with: "") == phone.replacingOccurrences(of: "-", with: "")
+        }
+    }
+
+    func findUserByIdentifierAndPhone(identifier: String, phone: String) -> User? {
+        let id = identifier.lowercased()
+        return users.first {
+            ($0.email.lowercased() == id || $0.username.lowercased() == id)
+            && $0.phone.replacingOccurrences(of: "-", with: "") == phone.replacingOccurrences(of: "-", with: "")
+        }
+    }
+
+    func resetPassword(userId: UUID, newPassword: String) {
+        if let idx = users.firstIndex(where: { $0.id == userId }) {
+            users[idx].password = newPassword
+            save()
+        }
+    }
+
     func updateUser(_ updated: User) {
         if let idx = users.firstIndex(where: { $0.id == updated.id }) {
             users[idx] = updated

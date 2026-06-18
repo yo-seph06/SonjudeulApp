@@ -11,6 +11,8 @@ struct LoginView: View {
     let role: UserRole
     @EnvironmentObject var auth: AuthViewModel
     @State private var navigateToSignUp = false
+    @State private var showFindId = false
+    @State private var showFindPassword = false
 
     @State private var identifier: String = ""
     @State private var password: String = ""
@@ -95,17 +97,28 @@ struct LoginView: View {
                         }
                     }
 
-                    HStack(spacing: 4) {
-                        Text("아직 계정이 없으신가요?")
+                    // 아이디 찾기 | 비밀번호 찾기
+                    HStack(spacing: 0) {
+                        Button { showFindId = true } label: {
+                            Text("아이디 찾기")
+                                .font(.sonjuCaption)
+                                .foregroundColor(.sonjuSecondary)
+                        }
+                        Text("  |  ")
                             .font(.sonjuCaption)
-                            .foregroundColor(.sonjuSecondary)
-                        Button {
-                            navigateToSignUp = true
-                        } label: {
+                            .foregroundColor(.sonjuDivider)
+                        Button { showFindPassword = true } label: {
+                            Text("비밀번호 찾기")
+                                .font(.sonjuCaption)
+                                .foregroundColor(.sonjuSecondary)
+                        }
+                        Text("  |  ")
+                            .font(.sonjuCaption)
+                            .foregroundColor(.sonjuDivider)
+                        Button { navigateToSignUp = true } label: {
                             Text("회원가입")
                                 .font(.sonjuCaption)
                                 .foregroundColor(.sonjuPrimary)
-                                .underline()
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -119,6 +132,12 @@ struct LoginView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $navigateToSignUp) {
             SignUpView()
+        }
+        .sheet(isPresented: $showFindId) {
+            FindIdView()
+        }
+        .sheet(isPresented: $showFindPassword) {
+            FindPasswordView()
         }
     }
 }

@@ -45,6 +45,8 @@
 		B034 /* CheckRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A034 /* CheckRow.swift */; };
 		B035 /* UserStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A035 /* UserStore.swift */; };
 		B036 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A036 /* SignUpView.swift */; };
+		B046 /* FindIdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A046 /* FindIdView.swift */; };
+		B047 /* FindPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A047 /* FindPasswordView.swift */; };
 		B037 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A037 /* SplashView.swift */; };
 		B038 /* PrivacyConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A038 /* PrivacyConsentView.swift */; };
 		B039 /* TermsOfServiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A039 /* TermsOfServiceView.swift */; };
@@ -100,6 +102,8 @@
 		A034 /* CheckRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckRow.swift; sourceTree = "<group>"; };
 		A035 /* UserStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserStore.swift; sourceTree = "<group>"; };
 		A036 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
+		A046 /* FindIdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindIdView.swift; sourceTree = "<group>"; };
+		A047 /* FindPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPasswordView.swift; sourceTree = "<group>"; };
 		A037 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		A038 /* PrivacyConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyConsentView.swift; sourceTree = "<group>"; };
 		A039 /* TermsOfServiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsOfServiceView.swift; sourceTree = "<group>"; };
@@ -154,6 +158,8 @@
 				A018 /* RoleSelectView.swift */,
 				A019 /* LoginView.swift */,
 				A036 /* SignUpView.swift */,
+				A046 /* FindIdView.swift */,
+				A047 /* FindPasswordView.swift */,
 				A037 /* SplashView.swift */,
 			);
 			path = Auth;
@@ -396,6 +402,8 @@
 				B018 /* RoleSelectView.swift in Sources */,
 				B019 /* LoginView.swift in Sources */,
 				B036 /* SignUpView.swift in Sources */,
+				B046 /* FindIdView.swift in Sources */,
+				B047 /* FindPasswordView.swift in Sources */,
 				B037 /* SplashView.swift in Sources */,
 				B020 /* HomeView.swift in Sources */,
 				B021 /* ChildTabView.swift in Sources */,

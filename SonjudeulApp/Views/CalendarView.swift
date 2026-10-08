@@ -35,7 +35,7 @@ struct CalendarView: View {
         if auth.selectedRole == .mentor {
             return bookingStore.bookings(forMentor: id)
         } else {
-            return bookingStore.bookings.filter { $0.childId == id }
+            return bookingStore.bookings(forChild: id)
         }
     }
 
@@ -44,7 +44,7 @@ struct CalendarView: View {
     }
 
     private func dotCount(for date: Date) -> Int {
-        let total = bookingsOn(date).count + scheduleStore.eventsOn(date).count
+        let total = bookingsOn(date).count + scheduleStore.eventsOn(date, ownerId: auth.currentUser?.id).count
         return min(total, 3)
     }
 
@@ -134,7 +134,7 @@ struct CalendarView: View {
                         // 선택된 날짜 항목
                         if let selected = selectedDate {
                             let dayBookings = bookingsOn(selected)
-                            let dayEvents = scheduleStore.eventsOn(selected)
+                            let dayEvents = scheduleStore.eventsOn(selected, ownerId: auth.currentUser?.id)
 
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
@@ -193,7 +193,7 @@ struct CalendarView: View {
                         }
 
                         // 다가오는 내 일정
-                        let upcoming = scheduleStore.upcomingEvents
+                        let upcoming = scheduleStore.upcomingEvents(ownerId: auth.currentUser?.id)
                         if !upcoming.isEmpty {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("다가오는 일정")
@@ -229,6 +229,7 @@ struct CalendarView: View {
             .sheet(isPresented: $showAddSheet) {
                 ScheduleAddView(initialDate: selectedDate ?? Date())
                     .environmentObject(scheduleStore)
+                    .environmentObject(auth)
             }
         }
     }

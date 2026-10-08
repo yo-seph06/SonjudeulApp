@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ScheduleAddView: View {
     @EnvironmentObject var scheduleStore: ScheduleStore
+    @EnvironmentObject var auth: AuthViewModel
     @Environment(\.dismiss) private var dismiss
 
     var initialDate: Date = Date()
@@ -85,8 +86,8 @@ struct ScheduleAddView: View {
                             disabled: title.trimmingCharacters(in: .whitespaces).isEmpty
                         ) {
                             let trimmed = title.trimmingCharacters(in: .whitespaces)
-                            guard !trimmed.isEmpty else { return }
-                            let event = ScheduleEvent(title: trimmed, date: date, notes: notes)
+                            guard !trimmed.isEmpty, let ownerId = auth.currentUser?.id else { return }
+                            let event = ScheduleEvent(title: trimmed, date: date, notes: notes, ownerId: ownerId)
                             scheduleStore.add(event)
                             dismiss()
                         }

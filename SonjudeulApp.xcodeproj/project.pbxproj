@@ -45,8 +45,6 @@
 		B034 /* CheckRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A034 /* CheckRow.swift */; };
 		B035 /* UserStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A035 /* UserStore.swift */; };
 		B036 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A036 /* SignUpView.swift */; };
-		B046 /* FindIdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A046 /* FindIdView.swift */; };
-		B047 /* FindPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A047 /* FindPasswordView.swift */; };
 		B037 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A037 /* SplashView.swift */; };
 		B038 /* PrivacyConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A038 /* PrivacyConsentView.swift */; };
 		B039 /* TermsOfServiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A039 /* TermsOfServiceView.swift */; };
@@ -56,6 +54,12 @@
 		B043 /* MentorRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A043 /* MentorRatingView.swift */; };
 		B044 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A044 /* ProfileEditView.swift */; };
 		B045 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A045 /* ShareSheet.swift */; };
+		B046 /* FindIdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A046 /* FindIdView.swift */; };
+		B047 /* FindPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A047 /* FindPasswordView.swift */; };
+		B051 /* AdminMemberListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A051 /* AdminMemberListView.swift */; };
+		B050 /* WithdrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A050 /* WithdrawView.swift */; };
+		B049 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A049 /* SessionStore.swift */; };
+		B048 /* PasswordHasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A048 /* PasswordHasher.swift */; };
 		BCBFBFB7AF2F65E623A0E99F /* ScheduleCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */; };
 		CAA60D0C8DADBCE9EB728BCE /* ScheduleAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */; };
 		CAL2 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAL1 /* CalendarView.swift */; };
@@ -102,8 +106,6 @@
 		A034 /* CheckRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckRow.swift; sourceTree = "<group>"; };
 		A035 /* UserStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserStore.swift; sourceTree = "<group>"; };
 		A036 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
-		A046 /* FindIdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindIdView.swift; sourceTree = "<group>"; };
-		A047 /* FindPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPasswordView.swift; sourceTree = "<group>"; };
 		A037 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		A038 /* PrivacyConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyConsentView.swift; sourceTree = "<group>"; };
 		A039 /* TermsOfServiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsOfServiceView.swift; sourceTree = "<group>"; };
@@ -113,6 +115,12 @@
 		A043 /* MentorRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorRatingView.swift; sourceTree = "<group>"; };
 		A044 /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
 		A045 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		A046 /* FindIdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindIdView.swift; sourceTree = "<group>"; };
+		A047 /* FindPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPasswordView.swift; sourceTree = "<group>"; };
+		A051 /* AdminMemberListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminMemberListView.swift; sourceTree = "<group>"; };
+		A050 /* WithdrawView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithdrawView.swift; sourceTree = "<group>"; };
+		A049 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		A048 /* PasswordHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordHasher.swift; sourceTree = "<group>"; };
 		CAL1 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		D5BB991958041852510D3CA9 /* BookingRequesterProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingRequesterProfileView.swift; sourceTree = "<group>"; };
 		EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleAddView.swift; sourceTree = "<group>"; };
@@ -227,6 +235,8 @@
 				A005 /* Subscription.swift */,
 				A006 /* MockData.swift */,
 				A035 /* UserStore.swift */,
+				A049 /* SessionStore.swift */,
+				A048 /* PasswordHasher.swift */,
 				A040 /* BookingStore.swift */,
 				A042 /* ReportStore.swift */,
 				980A32C637F4D7A57225BC96 /* ScheduleEvent.swift */,
@@ -278,6 +288,8 @@
 				GRP_CHILD /* Child */,
 				GRP_MENTOR /* Mentor */,
 				A044 /* ProfileEditView.swift */,
+				A051 /* AdminMemberListView.swift */,
+				A050 /* WithdrawView.swift */,
 				CAL1 /* CalendarView.swift */,
 				4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */,
 				EA1D0C1C7C2E5E5F6E83A522 /* ScheduleAddView.swift */,
@@ -331,7 +343,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					TGT1 = {
 						CreatedOnToolsVersion = 15.0;
@@ -424,6 +436,10 @@
 				B042 /* ReportStore.swift in Sources */,
 				B043 /* MentorRatingView.swift in Sources */,
 				B044 /* ProfileEditView.swift in Sources */,
+				B051 /* AdminMemberListView.swift in Sources */,
+				B050 /* WithdrawView.swift in Sources */,
+				B049 /* SessionStore.swift in Sources */,
+				B048 /* PasswordHasher.swift in Sources */,
 				CAL2 /* CalendarView.swift in Sources */,
 				B045 /* ShareSheet.swift in Sources */,
 				036A07E407E583BB5D0446C2 /* ScheduleEvent.swift in Sources */,
@@ -442,6 +458,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -472,6 +489,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = YJ4WVNYMV3;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -494,6 +512,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -504,6 +523,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -534,6 +554,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = YJ4WVNYMV3;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -549,6 +570,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -562,7 +584,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = YJ4WVNYMV3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "손주들";
@@ -570,7 +591,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -592,7 +613,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = YJ4WVNYMV3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "손주들";
@@ -600,7 +620,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

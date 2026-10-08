@@ -2,7 +2,19 @@ import SwiftUI
 
 struct BookingHistoryView: View {
     @EnvironmentObject var bookingStore: BookingStore
+    @EnvironmentObject var auth: AuthViewModel
     @State private var navigateToBooking = false
+
+    /// 로그인한 자녀 본인의 예약만 표시
+    private var myBookings: [BookingRecord] {
+        guard let id = auth.currentUser?.id else { return [] }
+        return bookingStore.bookings(forChild: id)
+    }
+
+    private var nextBooking: BookingRecord? {
+        guard let id = auth.currentUser?.id else { return nil }
+        return bookingStore.nextBooking(forChild: id)
+    }
 
     var body: some View {
         NavigationStack {
@@ -11,7 +23,7 @@ struct BookingHistoryView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 14) {
-                        if bookingStore.bookings.isEmpty {
+                        if myBookings.isEmpty {
                             VStack(spacing: 16) {
                                 Image(systemName: "calendar.badge.plus")
                                     .font(.system(size: 52))
@@ -27,7 +39,7 @@ struct BookingHistoryView: View {
                             }
                             .frame(maxWidth: .infinity)
                         } else {
-                            if let next = bookingStore.nextBooking {
+                            if let next = nextBooking {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("다음 방문")
@@ -59,7 +71,7 @@ struct BookingHistoryView: View {
                                 .shadow(color: Color.sonjuPrimary.opacity(0.4), radius: 10, x: 0, y: 4)
                             }
 
-                            ForEach(bookingStore.bookings) { item in
+                            ForEach(myBookings) { item in
                                 BookingCard(item: item)
                             }
                         }
@@ -100,6 +112,7 @@ struct BookingHistoryView: View {
 #Preview {
     BookingHistoryView()
         .environmentObject(BookingStore())
+        .environmentObject(AuthViewModel())
 }
 
 struct BookingCard: View {

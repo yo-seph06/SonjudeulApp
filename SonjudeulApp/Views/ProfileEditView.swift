@@ -107,7 +107,18 @@ struct ProfileEditView: View {
                     AmberButton(title: "저장하기", disabled: !canSave) {
                         save()
                     }
-                    .padding(.bottom, 32)
+
+                    if !auth.isAdmin {
+                        NavigationLink(destination: WithdrawView()) {
+                            Text("회원 탈퇴")
+                                .font(.sonjuCaption)
+                                .foregroundColor(.sonjuSecondary)
+                                .underline()
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Spacer().frame(height: 16)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 16)

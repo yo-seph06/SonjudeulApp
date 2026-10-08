@@ -21,6 +21,11 @@ class ReportStore: ObservableObject {
         reports.filter { $0.childId == id }
     }
 
+    func removeReports(forChild id: UUID) {
+        reports.removeAll { $0.childId == id }
+        save()
+    }
+
     private func save() {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

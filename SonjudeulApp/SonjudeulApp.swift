@@ -42,6 +42,8 @@ struct SonjudeulApp: App {
 
 struct RootView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var bookingStore: BookingStore
+    @EnvironmentObject var scheduleStore: ScheduleStore
 
     var body: some View {
         Group {
@@ -50,7 +52,9 @@ struct RootView: View {
             } else if !auth.isLoggedIn {
                 RoleSelectView()
             } else {
-                if auth.selectedRole == .mentor {
+                if auth.isAdmin {
+                    AdminRootView()
+                } else if auth.selectedRole == .mentor {
                     MentorTabView()
                 } else {
                     ChildTabView()
@@ -59,5 +63,17 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.35), value: auth.hasCompletedOnboarding)
         .animation(.easeInOut(duration: 0.35), value: auth.isLoggedIn)
+        .onAppear { syncNotifications(for: auth.currentUser?.id) }
+        .onChange(of: auth.currentUser?.id) { syncNotifications(for: $0) }
+    }
+
+    /// 로그인한 회원이 바뀌면 이전 회원의 예약 알림을 지우고 현재 회원의 알림만 다시 등록한다.
+    private func syncNotifications(for userId: UUID?) {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        center.removeAllDeliveredNotifications()
+        guard let userId else { return }
+        bookingStore.rescheduleNotifications(for: userId)
+        scheduleStore.rescheduleNotifications(for: userId)
     }
 }

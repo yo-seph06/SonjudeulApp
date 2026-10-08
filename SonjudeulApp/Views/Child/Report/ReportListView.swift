@@ -5,7 +5,7 @@ struct ReportListView: View {
     @EnvironmentObject var auth: AuthViewModel
 
     private var myReports: [Report] {
-        guard let id = auth.currentUser?.id else { return reportStore.reports }
+        guard let id = auth.currentUser?.id else { return [] }
         return reportStore.reports(forChild: id)
     }
 

@@ -6,6 +6,12 @@ struct MyPageView: View {
     @State private var pushEnabled = true
     @State private var showLogoutAlert = false
 
+    /// 로그인한 자녀 본인의 예약만 표시
+    private var myBookings: [BookingRecord] {
+        guard let id = auth.currentUser?.id else { return [] }
+        return bookingStore.bookings(forChild: id)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -67,7 +73,7 @@ struct MyPageView: View {
                         SonjuCard {
                             VStack(alignment: .leading, spacing: 12) {
                                 SectionHeader(title: "구독 현황")
-                                if bookingStore.bookings.isEmpty {
+                                if myBookings.isEmpty {
                                     HStack(spacing: 12) {
                                         Image(systemName: "calendar.badge.plus")
                                             .font(.system(size: 28))
@@ -83,9 +89,9 @@ struct MyPageView: View {
                                     }
                                     .padding(.vertical, 4)
                                 } else {
-                                    BadgeView(text: bookingStore.bookings.first?.plan ?? "안심 정기구독")
+                                    BadgeView(text: myBookings.first?.plan ?? "안심 정기구독")
                                     HStack {
-                                        Label("총 방문 횟수: \(bookingStore.bookings.count)회", systemImage: "house.fill")
+                                        Label("총 방문 횟수: \(myBookings.count)회", systemImage: "house.fill")
                                             .font(.sonjuCaption)
                                             .foregroundColor(.sonjuSecondary)
                                         Spacer()
@@ -102,7 +108,7 @@ struct MyPageView: View {
                         SonjuCard {
                             VStack(alignment: .leading, spacing: 12) {
                                 SectionHeader(title: "최근 방문 이력")
-                                if bookingStore.bookings.isEmpty {
+                                if myBookings.isEmpty {
                                     HStack(spacing: 12) {
                                         Image(systemName: "house.and.flag")
                                             .font(.system(size: 28))
@@ -119,7 +125,7 @@ struct MyPageView: View {
                                     .padding(.vertical, 4)
                                 } else {
                                     VStack(spacing: 0) {
-                                        ForEach(bookingStore.bookings.prefix(3)) { booking in
+                                        ForEach(myBookings.prefix(3)) { booking in
                                             HStack {
                                                 VStack(alignment: .leading, spacing: 2) {
                                                     Text(booking.date)
@@ -135,7 +141,7 @@ struct MyPageView: View {
                                                     .foregroundColor(booking.statusColor)
                                             }
                                             .padding(.vertical, 12)
-                                            if booking.id != bookingStore.bookings.prefix(3).last?.id {
+                                            if booking.id != myBookings.prefix(3).last?.id {
                                                 Divider().background(Color.sonjuDivider)
                                             }
                                         }

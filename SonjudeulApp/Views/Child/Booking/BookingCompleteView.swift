@@ -123,14 +123,14 @@ struct BookingCompleteView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 showIcon = true
             }
-            if !didRecord {
+            if !didRecord, let childId = auth.currentUser?.id {
                 didRecord = true
                 bookingStore.add(BookingRecord(
                     date: formattedDate,
                     rawDate: bookingVM.visitDate,
                     plan: planName,
                     status: "멘토 찾는 중",
-                    childId: auth.currentUser?.id
+                    childId: childId
                 ))
             }
         }

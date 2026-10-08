@@ -14,13 +14,16 @@ class ScheduleStore: ObservableObject {
     // MARK: - CRUD
 
     func add(_ event: ScheduleEvent) {
+        guard event.ownerId != nil else { return }
         events.append(event)
         events.sort { $0.date < $1.date }
         save()
         scheduleNotification(for: event)
     }
 
-    func delete(id: UUID) {
+    /// 본인 일정만 삭제할 수 있다.
+    func delete(id: UUID, ownerId: UUID?) {
+        guard let ownerId, events.contains(where: { $0.id == id && $0.ownerId == ownerId }) else { return }
         UNUserNotificationCenter.current().removePendingNotificationRequests(
             withIdentifiers: ["schedule-1h-\(id.uuidString)"]
         )
@@ -28,13 +31,31 @@ class ScheduleStore: ObservableObject {
         save()
     }
 
-    func eventsOn(_ date: Date) -> [ScheduleEvent] {
-        let cal = Calendar.current
-        return events.filter { cal.isDate($0.date, inSameDayAs: date) }
+    // 조회는 항상 로그인한 회원의 ID로 거른다
+    func events(forOwner ownerId: UUID?) -> [ScheduleEvent] {
+        guard let ownerId else { return [] }
+        return events.filter { $0.ownerId == ownerId }
     }
 
-    var upcomingEvents: [ScheduleEvent] {
-        events.filter { $0.date > Date() }
+    func eventsOn(_ date: Date, ownerId: UUID?) -> [ScheduleEvent] {
+        let cal = Calendar.current
+        return events(forOwner: ownerId).filter { cal.isDate($0.date, inSameDayAs: date) }
+    }
+
+    func upcomingEvents(ownerId: UUID?) -> [ScheduleEvent] {
+        events(forOwner: ownerId).filter { $0.date > Date() }
+    }
+
+    func removeEvents(forOwner ownerId: UUID) {
+        let ids = events.filter { $0.ownerId == ownerId }.map { "schedule-1h-\($0.id.uuidString)" }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+        events.removeAll { $0.ownerId == ownerId }
+        save()
+    }
+
+    /// 로그인한 회원의 일정 알림만 다시 등록한다.
+    func rescheduleNotifications(for ownerId: UUID) {
+        upcomingEvents(ownerId: ownerId).forEach { scheduleNotification(for: $0) }
     }
 
     // MARK: - Persistence

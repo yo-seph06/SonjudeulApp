@@ -349,18 +349,19 @@ struct SignUpView: View {
     private func signUp() {
         guard canSubmit, let gender = gender else { return }
 
-        if UserStore.shared.emailExists(email) {
-            errorMessage = "이미 사용 중인 이메일이에요"
+        // 화면에서 먼저 안내하고, 저장 단계(UserStore.register)에서도 다시 확인한다
+        if UserStore.shared.usernameExists(username) {
+            errorMessage = RegistrationError.duplicateUsername.message
             return
         }
-        if UserStore.shared.usernameExists(username) {
-            errorMessage = "이미 사용 중인 아이디에요"
+        if UserStore.shared.emailExists(email) {
+            errorMessage = RegistrationError.duplicateEmail.message
             return
         }
 
         let imageData = profileImage?.jpegData(compressionQuality: 0.7)
         let user = User(
-            name: name,
+            name: name.trimmingCharacters(in: .whitespaces),
             username: username,
             email: email,
             password: password,
@@ -371,8 +372,15 @@ struct SignUpView: View {
             profileImageData: imageData,
             university: selectedRole == .mentor ? university : nil
         )
-        UserStore.shared.register(user)
-        showSuccess = true
+        do {
+            try UserStore.shared.register(user)
+            errorMessage = ""
+            showSuccess = true
+        } catch let error as RegistrationError {
+            errorMessage = error.message
+        } catch {
+            errorMessage = "회원가입에 실패했어요. 다시 시도해주세요."
+        }
     }
 }
 

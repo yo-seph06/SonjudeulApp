@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ScheduleCalendarView: View {
     @EnvironmentObject var scheduleStore: ScheduleStore
+    @EnvironmentObject var auth: AuthViewModel
     @State private var currentMonth = Date()
     @State private var selectedDate: Date? = nil
     @State private var showAddSheet = false
@@ -92,7 +93,7 @@ struct ScheduleCalendarView: View {
                                                     date: date,
                                                     isSelected: selectedDate.map { cal.isDate($0, inSameDayAs: date) } ?? false,
                                                     isToday: cal.isDateInToday(date),
-                                                    dotCount: min(scheduleStore.eventsOn(date).count, 3),
+                                                    dotCount: min(scheduleStore.eventsOn(date, ownerId: auth.currentUser?.id).count, 3),
                                                     weekday: col
                                                 ) {
                                                     selectedDate = (selectedDate.map { cal.isDate($0, inSameDayAs: date) } ?? false) ? nil : date
@@ -109,7 +110,7 @@ struct ScheduleCalendarView: View {
 
                         // 선택된 날짜 일정
                         if let selected = selectedDate {
-                            let dayEvents = scheduleStore.eventsOn(selected)
+                            let dayEvents = scheduleStore.eventsOn(selected, ownerId: auth.currentUser?.id)
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
                                     Text(formatDate(selected))
@@ -148,7 +149,7 @@ struct ScheduleCalendarView: View {
                         }
 
                         // 다가오는 일정
-                        let upcoming = scheduleStore.upcomingEvents
+                        let upcoming = scheduleStore.upcomingEvents(ownerId: auth.currentUser?.id)
                         if !upcoming.isEmpty {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("다가오는 일정")
@@ -184,6 +185,7 @@ struct ScheduleCalendarView: View {
             .sheet(isPresented: $showAddSheet) {
                 ScheduleAddView(initialDate: selectedDate ?? Date())
                     .environmentObject(scheduleStore)
+                    .environmentObject(auth)
             }
         }
     }
@@ -200,6 +202,7 @@ struct ScheduleCalendarView: View {
 
 struct ScheduleEventCard: View {
     @EnvironmentObject var scheduleStore: ScheduleStore
+    @EnvironmentObject var auth: AuthViewModel
     let event: ScheduleEvent
 
     private var timeText: String {
@@ -236,7 +239,7 @@ struct ScheduleEventCard: View {
                 }
                 Spacer()
                 Button {
-                    scheduleStore.delete(id: event.id)
+                    scheduleStore.delete(id: event.id, ownerId: auth.currentUser?.id)
                 } label: {
                     Image(systemName: "trash")
                         .font(.system(size: 15))
@@ -250,4 +253,5 @@ struct ScheduleEventCard: View {
 #Preview {
     ScheduleCalendarView()
         .environmentObject(ScheduleStore())
+        .environmentObject(AuthViewModel())
 }

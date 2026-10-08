@@ -106,26 +106,47 @@ class BookingStore: ObservableObject {
         bookings.filter { $0.mentorId == id && $0.status == "방문 완료" }.count
     }
 
-    // MARK: - Child side
+    // MARK: - Child side (항상 로그인한 자녀의 ID로 걸러서 사용)
 
-    var nextBooking: BookingRecord? {
-        bookings.first(where: { $0.status == "예약 확정" })
+    func bookings(forChild id: UUID) -> [BookingRecord] {
+        bookings.filter { $0.childId == id }
     }
 
-    var todayBooking: BookingRecord? {
-        let cal = Calendar.current
-        return bookings.first(where: {
-            $0.status == "예약 확정" && cal.isDateInToday($0.rawDate)
-        })
+    func nextBooking(forChild id: UUID) -> BookingRecord? {
+        bookings(forChild: id).first(where: { $0.status == "예약 확정" })
     }
 
-    func completedThisMonth() -> [BookingRecord] {
-        let cal = Calendar.current
-        let now = Date()
-        return bookings.filter {
-            $0.status == "방문 완료" &&
-            cal.isDate($0.rawDate, equalTo: now, toGranularity: .month)
+    // MARK: - 회원 탈퇴 / 로그인 전환
+
+    /// 탈퇴한 자녀의 진행 중인 예약은 삭제하고, 완료된 방문 기록은 자녀 정보와의 연결을 끊는다.
+    func removeData(forWithdrawnChild id: UUID) {
+        let pending = bookings.filter { $0.childId == id && $0.status != "방문 완료" }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: pending.map { "visit-1h-\($0.id.uuidString)" }
+        )
+        bookings.removeAll { $0.childId == id && $0.status != "방문 완료" }
+        for idx in bookings.indices where bookings[idx].childId == id {
+            bookings[idx].childId = nil
         }
+        save()
+    }
+
+    /// 탈퇴한 멘토가 맡은 미완료 예약은 다시 멘토를 찾도록 되돌린다.
+    func releaseBookings(forWithdrawnMentor id: UUID) {
+        for idx in bookings.indices
+        where bookings[idx].mentorId == id && bookings[idx].status != "방문 완료" {
+            bookings[idx].status = "멘토 찾는 중"
+            bookings[idx].mentorId = nil
+            bookings[idx].mentorName = ""
+        }
+        save()
+    }
+
+    /// 로그인한 회원의 확정 예약 알림만 다시 등록한다.
+    func rescheduleNotifications(for userId: UUID) {
+        bookings
+            .filter { ($0.childId == userId || $0.mentorId == userId) && $0.status == "예약 확정" }
+            .forEach { scheduleOneHourBeforeNotification(booking: $0) }
     }
 
     // MARK: - Mentor side

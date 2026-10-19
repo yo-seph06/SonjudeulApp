@@ -5,8 +5,16 @@ struct AdminRootView: View {
     @EnvironmentObject var auth: AuthViewModel
 
     var body: some View {
-        NavigationStack {
-            AdminMemberListView()
+        Group {
+            // 기본 관리자 비밀번호(해시가 소스코드에 공개됨)를 바꾸기 전에는 관리자 기능을 열지 않는다.
+            // 저장소의 관리자 기능도 같은 조건(canUseAdminFeatures)으로 막혀 있다.
+            if auth.mustChangeAdminPassword {
+                AdminPasswordChangeView(isForced: true)
+            } else {
+                NavigationStack {
+                    AdminMemberListView()
+                }
+            }
         }
         .tint(.sonjuPrimary)
     }
@@ -694,6 +702,8 @@ struct AdminAccessDeniedView: View {
 private struct AdminPasswordChangeView: View {
     @EnvironmentObject var auth: AuthViewModel
     @Environment(\.dismiss) private var dismiss
+    /// 기본 비밀번호를 쓰는 관리자의 첫 화면 (닫을 수 없고 로그아웃만 가능)
+    var isForced = false
     @State private var current = ""
     @State private var newPassword = ""
     @State private var confirm = ""
@@ -701,7 +711,7 @@ private struct AdminPasswordChangeView: View {
     @State private var done = false
 
     private var canSave: Bool {
-        !current.isEmpty && newPassword.count >= 8 && newPassword == confirm
+        !current.isEmpty && newPassword.count >= 8 && newPassword == confirm && newPassword != current
     }
 
     var body: some View {
@@ -709,6 +719,12 @@ private struct AdminPasswordChangeView: View {
             ZStack {
                 Color.sonjuBackground.ignoresSafeArea()
                 VStack(alignment: .leading, spacing: 16) {
+                    if isForced {
+                        Text("앱에 기본으로 설정된 관리자 비밀번호를 사용 중이에요. 보안을 위해 새 비밀번호로 바꾼 뒤 관리자 기능을 사용할 수 있어요.")
+                            .font(.sonjuCaption)
+                            .foregroundColor(.sonjuDeep)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     field("현재 비밀번호", $current)
                     field("새 비밀번호 (8자 이상)", $newPassword)
                     field("새 비밀번호 확인", $confirm)
@@ -726,9 +742,15 @@ private struct AdminPasswordChangeView: View {
                                 category: .security, title: "관리자 비밀번호 변경",
                                 message: "관리자 계정 \(auth.currentUser?.username ?? "")의 비밀번호가 변경되었어요. 본인이 변경하지 않았다면 즉시 비밀번호를 다시 바꿔주세요.",
                                 occurredAt: changedAt)
+                            current = ""; newPassword = ""; confirm = ""
                             done = true
                             message = "비밀번호가 변경되었어요"
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
+                            if !isForced {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
+                            }
+                        } catch AccountError.weakAdminPassword {
+                            done = false
+                            message = "기본 비밀번호는 다시 쓸 수 없어요. 8자 이상의 새 비밀번호를 입력해주세요."
                         } catch {
                             done = false
                             message = "현재 비밀번호가 올바르지 않아요"
@@ -742,8 +764,13 @@ private struct AdminPasswordChangeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("닫기") { dismiss() }
-                        .foregroundColor(.sonjuText)
+                    if isForced {
+                        Button("로그아웃") { auth.logout() }
+                            .foregroundColor(.sonjuText)
+                    } else {
+                        Button("닫기") { dismiss() }
+                            .foregroundColor(.sonjuText)
+                    }
                 }
             }
         }

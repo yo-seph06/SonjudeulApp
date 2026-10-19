@@ -14,6 +14,8 @@ class AuthViewModel: ObservableObject {
 
     /// 관리자 여부는 화면 상태가 아니라 저장소의 회원 권한으로 판단한다.
     var isAdmin: Bool { store.isAdmin(currentUser?.id) }
+    /// 기본 관리자 비밀번호를 아직 바꾸지 않은 관리자 (관리자 기능 사용 전 변경 필요)
+    var mustChangeAdminPassword: Bool { store.requiresAdminPasswordChange(currentUser?.id) }
 
     init(store: UserStore = .shared, session: SessionStoring = KeychainSessionStore(),
          now: @escaping () -> Date = Date.init) {
@@ -67,6 +69,7 @@ class AuthViewModel: ObservableObject {
     }
 
     func logout() {
+        AdminReauthSession.shared.invalidate()
         session.clear()
         isLoggedIn = false
         currentUser = nil
@@ -82,6 +85,9 @@ class AuthViewModel: ObservableObject {
     func changePassword(current: String, new newPassword: String) throws {
         guard let id = currentUser?.id else { throw AccountError.notFound }
         try store.changePassword(userId: id, current: current, new: newPassword)
+        // 비밀번호가 바뀌면 이전 재인증은 무효로 하고, 관리자 화면이 권한 상태를 다시 읽게 한다
+        AdminReauthSession.shared.invalidate()
+        objectWillChange.send()
     }
 
     /// 본인 계정 탈퇴 신청 (3일 유예). 계정은 즉시 비활성화되고 저장된 로그인 상태도 지운다.

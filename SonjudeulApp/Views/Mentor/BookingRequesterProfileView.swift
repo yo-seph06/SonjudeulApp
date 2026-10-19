@@ -12,6 +12,14 @@ struct BookingRequesterProfileView: View {
         return UserStore.shared.findUserById(id)
     }
 
+    /// 전체 연락처는 이 멘토가 수락해 확정된 예약에서만 보여준다. 수락 전에는 뒤 4자리만 표시한다.
+    private var phoneText: String {
+        guard let phone = requester?.phone, !phone.isEmpty else { return "-" }
+        let isMyConfirmedBooking = booking.status == "예약 확정"
+            && booking.mentorId != nil && booking.mentorId == auth.currentUser?.id
+        return isMyConfirmedBooking ? phone : "010-****-\(String(phone.suffix(4))) (수락 후 공개)"
+    }
+
     private var age: Int? {
         guard let user = requester else { return nil }
         return Calendar.current.dateComponents([.year], from: user.birthDate, to: Date()).year
@@ -71,7 +79,7 @@ struct BookingRequesterProfileView: View {
                                 ProfileInfoRow(
                                     icon: "phone.fill",
                                     label: "연락처",
-                                    value: requester?.phone ?? "-"
+                                    value: phoneText
                                 )
                             }
                         }

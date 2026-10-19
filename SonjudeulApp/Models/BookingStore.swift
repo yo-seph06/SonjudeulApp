@@ -196,15 +196,17 @@ class BookingStore: ObservableObject {
 
     /// 관리자만 전체 방문 일정을 조회할 수 있다. 요청자의 권한은 회원 저장소 기준으로 다시 확인한다.
     func adminVisits(requestedBy adminId: UUID?, userStore: UserStore = .shared) throws -> [BookingRecord] {
-        guard userStore.isAdmin(adminId) else { throw VisitAdminError.notAuthorized }
+        guard userStore.canUseAdminFeatures(adminId) else { throw VisitAdminError.notAuthorized }
         return bookings
     }
 
     /// 미완료 방문 일정의 날짜·시간만 바꾼다. 다른 항목과 다른 일정은 그대로 둔다.
     /// 알림은 해당 회원이 다음에 로그인할 때 바뀐 시간으로 다시 등록된다.
     func adminReschedule(id: UUID, to newDate: Date, requestedBy adminId: UUID?,
-                         userStore: UserStore = .shared, now: Date = Date()) throws {
-        guard userStore.isAdmin(adminId) else { throw VisitAdminError.notAuthorized }
+                         userStore: UserStore = .shared, reauth: AdminReauthSession = .shared,
+                         now: Date = Date()) throws {
+        guard userStore.canUseAdminFeatures(adminId) else { throw VisitAdminError.notAuthorized }
+        guard reauth.isFresh(for: adminId, now: now) else { throw VisitAdminError.reauthRequired }
         guard let idx = bookings.firstIndex(where: { $0.id == id }) else { throw VisitAdminError.notFound }
         guard Self.isAdminEditable(bookings[idx]) else { throw VisitAdminError.completed }
         guard newDate > now else { throw VisitAdminError.pastDate }
@@ -226,8 +228,10 @@ class BookingStore: ObservableObject {
     }
 
     /// 미완료 방문 일정 1건만 삭제한다.
-    func adminDelete(id: UUID, requestedBy adminId: UUID?, userStore: UserStore = .shared) throws {
-        guard userStore.isAdmin(adminId) else { throw VisitAdminError.notAuthorized }
+    func adminDelete(id: UUID, requestedBy adminId: UUID?, userStore: UserStore = .shared,
+                     reauth: AdminReauthSession = .shared) throws {
+        guard userStore.canUseAdminFeatures(adminId) else { throw VisitAdminError.notAuthorized }
+        guard reauth.isFresh(for: adminId) else { throw VisitAdminError.reauthRequired }
         guard let idx = bookings.firstIndex(where: { $0.id == id }) else { throw VisitAdminError.notFound }
         guard Self.isAdminEditable(bookings[idx]) else { throw VisitAdminError.completed }
 
@@ -288,6 +292,7 @@ enum VisitAdminError: Error, Equatable {
     case notFound
     case completed
     case pastDate
+    case reauthRequired
     case saveFailed
 
     var message: String {
@@ -296,6 +301,7 @@ enum VisitAdminError: Error, Equatable {
         case .notFound:      return "이미 삭제된 일정이에요. 목록을 새로고침해주세요."
         case .completed:     return "방문 완료된 일정은 수정하거나 삭제할 수 없어요."
         case .pastDate:      return "지금 이후의 날짜와 시간을 선택해주세요."
+        case .reauthRequired: return "일정을 변경·삭제하려면 관리자 비밀번호를 다시 확인해야 해요."
         case .saveFailed:    return "변경 사항을 저장하지 못했어요. 다시 시도해주세요."
         }
     }

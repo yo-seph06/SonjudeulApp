@@ -161,6 +161,7 @@ private struct AdminMemberLinkDetailView: View {
 
     @State private var showPicker = false
     @State private var pendingUnlink: PendingUnlink?
+    @State private var pendingReauth: PendingAdminAction?
     @State private var errorMessage: String?
 
     private struct PendingUnlink: Identifiable {
@@ -284,10 +285,18 @@ private struct AdminMemberLinkDetailView: View {
             set: { if !$0 { pendingUnlink = nil } }
         ), presenting: pendingUnlink) { target in
             Button("취소", role: .cancel) {}
-            Button("해제", role: .destructive) { unlink(target) }
+            Button("해제", role: .destructive) {
+                performWithAdminReauth(
+                    PendingAdminAction(
+                        title: "자녀·멘토 연결 해제",
+                        target: "자녀 \(target.child.name)(\(target.child.username)) · 멘토 \(target.mentor.name)(\(target.mentor.username))",
+                        run: { unlink(target) }),
+                    adminId: auth.currentUser?.id, pending: $pendingReauth)
+            }
         } message: { target in
             Text("자녀 \(target.child.name) (\(target.child.username))\n멘토 \(target.mentor.name) (\(target.mentor.username))\n\n두 회원의 연결을 해제할까요?")
         }
+        .adminReauth($pendingReauth)
     }
 
     private func caption(_ text: String) -> some View {

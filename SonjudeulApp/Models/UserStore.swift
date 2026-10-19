@@ -27,6 +27,8 @@ enum AccountError: Error, Equatable {
     case wrongPassword
     case adminProtected
     case notPendingDeletion
+    /// 관리자 비밀번호 규칙 위반 (8자 미만 또는 기본 비밀번호 재사용)
+    case weakAdminPassword
 }
 
 /// 관리자 화면에 보여줄 회원 요약 (비밀번호·연락처 등 민감 정보 제외)
@@ -206,8 +208,22 @@ class UserStore {
         guard PasswordHasher.verify(current, against: users[idx].passwordHash) else {
             throw AccountError.wrongPassword
         }
+        // 관리자: 기본 비밀번호(해시가 소스코드에 공개됨)로 다시 바꾸거나 짧은 비밀번호를 쓰지 못하게 한다
+        if users[idx].isAdmin {
+            guard newPassword.count >= 8,
+                  !PasswordHasher.verify(newPassword, against: Self.defaultAdminPasswordHash) else {
+                throw AccountError.weakAdminPassword
+            }
+        }
         users[idx].passwordHash = PasswordHasher.hash(newPassword)
         save()
+    }
+
+    /// 정상 회원 본인의 비밀번호가 맞는지만 확인한다 (관리자 재인증용). 회원 정보는 돌려주지 않는다.
+    func verifyPassword(userId: UUID, password: String) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        guard let user = users.first(where: { $0.id == userId && $0.isActive }) else { return false }
+        return PasswordHasher.verify(password, against: user.passwordHash)
     }
 
     // MARK: - 프로필 수정
@@ -289,10 +305,22 @@ class UserStore {
         return findUserById(userId)?.isAdmin == true
     }
 
+    /// 앱에 기본으로 들어 있는 관리자 비밀번호를 아직 쓰고 있는지.
+    /// 기본 비밀번호의 해시는 소스코드(공개 저장소)에 있으므로 바꾸기 전에는 관리자 기능을 막는다.
+    func requiresAdminPasswordChange(_ userId: UUID?) -> Bool {
+        guard let userId, let user = findUserById(userId), user.isAdmin else { return false }
+        return user.passwordHash == Self.defaultAdminPasswordHash
+    }
+
+    /// 관리자 기능 사용 가능 여부: 저장소 기준 관리자 권한 + 기본 비밀번호 변경 완료
+    func canUseAdminFeatures(_ userId: UUID?) -> Bool {
+        isAdmin(userId) && !requiresAdminPasswordChange(userId)
+    }
+
     /// 관리자만 호출 가능. 요청자의 권한을 저장소 기준으로 다시 확인한다.
     /// 유예기간이 끝난 계정은 (영구 삭제 처리 전이라도) 명단에 포함하지 않는다.
     func memberList(requestedBy requesterId: UUID?, now: Date = Date()) throws -> [MemberSummary] {
-        guard isAdmin(requesterId) else { throw AccountError.notAuthorized }
+        guard canUseAdminFeatures(requesterId) else { throw AccountError.notAuthorized }
         return users
             .filter { !$0.isAdmin && !$0.isPastDeletionDate(now: now) }
             .enumerated()

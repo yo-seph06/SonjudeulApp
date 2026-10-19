@@ -57,7 +57,7 @@ class ScheduleStore: ObservableObject {
     /// 관리자용: 개인 일정은 제목·메모 없이 건수만 돌려준다. 관리자가 아니면 nil.
     func personalScheduleCounts(requestedBy adminId: UUID?, userStore: UserStore = .shared,
                                 now: Date = Date()) -> (total: Int, upcoming: Int)? {
-        guard userStore.isAdmin(adminId) else { return nil }
+        guard userStore.canUseAdminFeatures(adminId) else { return nil }
         let owned = events.filter { $0.ownerId != nil }
         return (owned.count, owned.filter { $0.date > now }.count)
     }

@@ -18,6 +18,7 @@ enum MemberLinkError: Error, Equatable {
     case alreadyLinked
     case childAlreadyHasMentor
     case linkNotFound
+    case reauthRequired
     case saveFailed
 
     var message: String {
@@ -29,6 +30,7 @@ enum MemberLinkError: Error, Equatable {
         case .alreadyLinked:         return "이미 연결된 회원이에요."
         case .childAlreadyHasMentor: return "이 자녀에게는 이미 담당 멘토가 있어요. 기존 연결을 먼저 해제해주세요."
         case .linkNotFound:          return "이미 해제된 연결이에요. 목록을 새로고침해주세요."
+        case .reauthRequired:        return "연결을 해제하려면 관리자 비밀번호를 다시 확인해야 해요."
         case .saveFailed:            return "변경 사항을 저장하지 못했어요. 다시 시도해주세요."
         }
     }
@@ -77,7 +79,7 @@ final class MemberLinkStore: ObservableObject {
     @discardableResult
     func link(childId: UUID, mentorId: UUID, requestedBy adminId: UUID?, now: Date = Date()) throws -> MemberLink {
         lock.lock(); defer { lock.unlock() }
-        guard let adminId, userStore.isAdmin(adminId) else { throw MemberLinkError.notAuthorized }
+        guard let adminId, userStore.canUseAdminFeatures(adminId) else { throw MemberLinkError.notAuthorized }
         guard let child = userStore.users.first(where: { $0.id == childId }),
               let mentor = userStore.users.first(where: { $0.id == mentorId }),
               !child.isPastDeletionDate(now: now), !mentor.isPastDeletionDate(now: now)
@@ -97,9 +99,11 @@ final class MemberLinkStore: ObservableObject {
     }
 
     /// 지정한 연결 1건만 해제한다. 다른 연결은 그대로 둔다.
-    func unlink(linkId: UUID, requestedBy adminId: UUID?) throws {
+    /// 관리자 재인증(최근 5분) 후에만 해제할 수 있다.
+    func unlink(linkId: UUID, requestedBy adminId: UUID?, reauth: AdminReauthSession = .shared) throws {
         lock.lock(); defer { lock.unlock() }
-        guard let adminId, userStore.isAdmin(adminId) else { throw MemberLinkError.notAuthorized }
+        guard let adminId, userStore.canUseAdminFeatures(adminId) else { throw MemberLinkError.notAuthorized }
+        guard reauth.isFresh(for: adminId) else { throw MemberLinkError.reauthRequired }
         guard links.contains(where: { $0.id == linkId }) else { throw MemberLinkError.linkNotFound }
         try commit(links.filter { $0.id != linkId })
     }

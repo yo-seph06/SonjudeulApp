@@ -79,18 +79,18 @@ final class AdminAlertStore: ObservableObject {
 
     /// 최신순. 관리자가 아니면 빈 목록.
     func alerts(requestedBy adminId: UUID?) -> [AdminAlert] {
-        guard userStore.isAdmin(adminId) else { return [] }
+        guard userStore.canUseAdminFeatures(adminId) else { return [] }
         return alerts.sorted { $0.occurredAt > $1.occurredAt }
     }
 
     func unreadCount(requestedBy adminId: UUID?) -> Int {
-        guard userStore.isAdmin(adminId) else { return 0 }
+        guard userStore.canUseAdminFeatures(adminId) else { return 0 }
         return alerts.filter { !$0.isRead }.count
     }
 
     func setRead(_ isRead: Bool, id: UUID, requestedBy adminId: UUID?) {
         lock.lock(); defer { lock.unlock() }
-        guard userStore.isAdmin(adminId),
+        guard userStore.canUseAdminFeatures(adminId),
               let idx = alerts.firstIndex(where: { $0.id == id }), alerts[idx].isRead != isRead else { return }
         alerts[idx].isRead = isRead
         save()
@@ -98,7 +98,7 @@ final class AdminAlertStore: ObservableObject {
 
     func markAllRead(requestedBy adminId: UUID?) {
         lock.lock(); defer { lock.unlock() }
-        guard userStore.isAdmin(adminId), alerts.contains(where: { !$0.isRead }) else { return }
+        guard userStore.canUseAdminFeatures(adminId), alerts.contains(where: { !$0.isRead }) else { return }
         for idx in alerts.indices { alerts[idx].isRead = true }
         save()
     }

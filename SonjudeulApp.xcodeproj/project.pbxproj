@@ -64,6 +64,8 @@
 		B057 /* AdminScheduleManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A057 /* AdminScheduleManagementView.swift */; };
 		B058 /* AdminAlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A058 /* AdminAlertStore.swift */; };
 		B059 /* AdminAlertCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A059 /* AdminAlertCenterView.swift */; };
+		B060 /* AdminReauthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A060 /* AdminReauthSession.swift */; };
+		B061 /* AdminReauthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A061 /* AdminReauthView.swift */; };
 		B051 /* AdminMemberListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A051 /* AdminMemberListView.swift */; };
 		B050 /* WithdrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A050 /* WithdrawView.swift */; };
 		B049 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A049 /* SessionStore.swift */; };
@@ -133,6 +135,8 @@
 		A057 /* AdminScheduleManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminScheduleManagementView.swift; sourceTree = "<group>"; };
 		A058 /* AdminAlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAlertStore.swift; sourceTree = "<group>"; };
 		A059 /* AdminAlertCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAlertCenterView.swift; sourceTree = "<group>"; };
+		A060 /* AdminReauthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminReauthSession.swift; sourceTree = "<group>"; };
+		A061 /* AdminReauthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminReauthView.swift; sourceTree = "<group>"; };
 		A051 /* AdminMemberListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminMemberListView.swift; sourceTree = "<group>"; };
 		A050 /* WithdrawView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithdrawView.swift; sourceTree = "<group>"; };
 		A049 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -256,6 +260,7 @@
 				A054 /* DeviceCalendarStore.swift */,
 				A055 /* MemberLinkStore.swift */,
 				A058 /* AdminAlertStore.swift */,
+				A060 /* AdminReauthSession.swift */,
 				A049 /* SessionStore.swift */,
 				A048 /* PasswordHasher.swift */,
 				A040 /* BookingStore.swift */,
@@ -313,6 +318,7 @@
 				A056 /* AdminLinkManagementView.swift */,
 				A057 /* AdminScheduleManagementView.swift */,
 				A059 /* AdminAlertCenterView.swift */,
+				A061 /* AdminReauthView.swift */,
 				A050 /* WithdrawView.swift */,
 				CAL1 /* CalendarView.swift */,
 				4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */,
@@ -468,6 +474,8 @@
 				B057 /* AdminScheduleManagementView.swift in Sources */,
 				B058 /* AdminAlertStore.swift in Sources */,
 				B059 /* AdminAlertCenterView.swift in Sources */,
+				B060 /* AdminReauthSession.swift in Sources */,
+				B061 /* AdminReauthView.swift in Sources */,
 				B051 /* AdminMemberListView.swift in Sources */,
 				B050 /* WithdrawView.swift in Sources */,
 				B049 /* SessionStore.swift in Sources */,

@@ -186,6 +186,7 @@ private struct AdminVisitDetailView: View {
 
     @State private var showReschedule = false
     @State private var showDeleteAlert = false
+    @State private var pendingReauth: PendingAdminAction?
     @State private var errorMessage: String?
 
     private static let noInfo = "정보 없음"
@@ -301,10 +302,17 @@ private struct AdminVisitDetailView: View {
         }
         .alert("일정 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
-            Button("삭제", role: .destructive) { delete(visit) }
+            Button("삭제", role: .destructive) {
+                performWithAdminReauth(
+                    PendingAdminAction(title: "방문 일정 삭제",
+                                       target: "\(VisitText.title(visit)) · \(visit.date)",
+                                       run: { delete(visit) }),
+                    adminId: auth.currentUser?.id, pending: $pendingReauth)
+            }
         } message: {
             Text("\(VisitText.title(visit))\n\(VisitText.day(visit.rawDate)) \(VisitText.time(visit.rawDate))\n자녀: \(people.childText ?? Self.noInfo)\n멘토: \(people.mentorText ?? Self.noInfo)\n\n이 일정을 삭제할까요? 삭제하면 되돌릴 수 없어요.")
         }
+        .adminReauth($pendingReauth)
     }
 
     private var divider: some View { Divider().background(Color.sonjuDivider) }
@@ -351,6 +359,7 @@ private struct VisitRescheduleView: View {
 
     @State private var newDate: Date
     @State private var showConfirm = false
+    @State private var pendingReauth: PendingAdminAction?
     @State private var errorMessage: String?
 
     init(visit: BookingRecord, people: VisitPeople) {
@@ -426,10 +435,17 @@ private struct VisitRescheduleView: View {
             }
             .alert("일정 변경", isPresented: $showConfirm) {
                 Button("취소", role: .cancel) {}
-                Button("변경") { save() }
+                Button("변경") {
+                    performWithAdminReauth(
+                        PendingAdminAction(title: "방문 일정 날짜·시간 변경",
+                                           target: "\(VisitText.title(visit)) · \(visit.date) → \(BookingStore.displayDateText(newDate))",
+                                           run: { save() }),
+                        adminId: auth.currentUser?.id, pending: $pendingReauth)
+                }
             } message: {
                 Text("\(VisitText.title(visit))\n자녀: \(people.childText ?? "정보 없음")\n멘토: \(people.mentorText ?? "정보 없음")\n\n변경 전: \(visit.date)\n변경 후: \(BookingStore.displayDateText(newDate)) (\(VisitText.time(newDate)))\n\n일정을 변경할까요?")
             }
+            .adminReauth($pendingReauth)
         }
     }
 

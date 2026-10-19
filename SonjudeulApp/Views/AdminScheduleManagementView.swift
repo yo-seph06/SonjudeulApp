@@ -60,9 +60,6 @@ struct AdminScheduleManagementView: View {
         }
         .navigationTitle("일정 관리")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(for: VisitRoute.self) { route in
-            AdminVisitDetailView(visitId: route.visitId, members: members)
-        }
         .onAppear(perform: reload)
     }
 
@@ -105,7 +102,10 @@ struct AdminScheduleManagementView: View {
                                     .padding(.vertical, 24)
                             } else {
                                 ForEach(rows) { visit in
-                                    NavigationLink(value: VisitRoute(visitId: visit.id)) {
+                                    // isPresented로 열린 화면이라 값 기반 링크를 쓰면 이 화면이 한 번 더 쌓이므로 목적지를 직접 지정한다
+                                    NavigationLink {
+                                        AdminVisitDetailView(visitId: visit.id, members: members)
+                                    } label: {
                                         VisitOverviewRow(visit: visit, members: members)
                                             .contentShape(Rectangle())
                                     }
@@ -442,10 +442,6 @@ private struct VisitRescheduleView: View {
 }
 
 // MARK: - 공통
-
-private struct VisitRoute: Hashable {
-    let visitId: UUID
-}
 
 /// 방문 일정의 관련 회원. 회원 명단에서 ID로 찾고, 없으면 예약에 저장된 멘토 이름만 쓴다.
 private struct VisitPeople {

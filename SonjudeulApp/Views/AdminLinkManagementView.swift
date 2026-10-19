@@ -63,9 +63,6 @@ struct AdminLinkManagementView: View {
         }
         .navigationTitle("자녀·멘토 연결 관리")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(for: LinkMemberRoute.self) { route in
-            AdminMemberLinkDetailView(memberId: route.memberId, members: members)
-        }
         .onAppear(perform: reload)
     }
 
@@ -106,7 +103,10 @@ struct AdminLinkManagementView: View {
                                     .padding(.vertical, 24)
                             } else {
                                 ForEach(rows) { member in
-                                    NavigationLink(value: LinkMemberRoute(memberId: member.id)) {
+                                    // isPresented로 열린 화면이라 값 기반 링크를 쓰면 이 화면이 한 번 더 쌓이므로 목적지를 직접 지정한다
+                                    NavigationLink {
+                                        AdminMemberLinkDetailView(memberId: member.id, members: members)
+                                    } label: {
                                         LinkOverviewRow(
                                             member: member,
                                             linked: LinkLookup.counterparts(of: member, in: members, store: linkStore)
@@ -445,10 +445,6 @@ private struct LinkCandidatePicker: View {
 }
 
 // MARK: - 공통
-
-private struct LinkMemberRoute: Hashable {
-    let memberId: UUID
-}
 
 enum MemberSide: CaseIterable {
     case child, mentor

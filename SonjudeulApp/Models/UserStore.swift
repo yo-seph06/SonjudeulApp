@@ -312,9 +312,10 @@ class UserStore {
         return user.passwordHash == Self.defaultAdminPasswordHash
     }
 
-    /// 관리자 기능 사용 가능 여부: 저장소 기준 관리자 권한 + 기본 비밀번호 변경 완료
+    /// 관리자 기능 사용 가능 여부 (저장소 기준 관리자 권한).
+    /// 기본 비밀번호 사용 중이어도 막지 않고, 관리자 화면에서 변경을 안내한다.
     func canUseAdminFeatures(_ userId: UUID?) -> Bool {
-        isAdmin(userId) && !requiresAdminPasswordChange(userId)
+        isAdmin(userId)
     }
 
     /// 관리자만 호출 가능. 요청자의 권한을 저장소 기준으로 다시 확인한다.

@@ -5,16 +5,8 @@ struct AdminRootView: View {
     @EnvironmentObject var auth: AuthViewModel
 
     var body: some View {
-        Group {
-            // 기본 관리자 비밀번호(해시가 소스코드에 공개됨)를 바꾸기 전에는 관리자 기능을 열지 않는다.
-            // 저장소의 관리자 기능도 같은 조건(canUseAdminFeatures)으로 막혀 있다.
-            if auth.mustChangeAdminPassword {
-                AdminPasswordChangeView(isForced: true)
-            } else {
-                NavigationStack {
-                    AdminMemberListView()
-                }
-            }
+        NavigationStack {
+            AdminMemberListView()
         }
         .tint(.sonjuPrimary)
     }
@@ -91,6 +83,11 @@ struct AdminMemberListView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
+                    if auth.mustChangeAdminPassword {
+                        defaultPasswordWarning
+                            .padding(.horizontal, 16)
+                    }
+
                     // 요약
                     HStack(spacing: 10) {
                         summaryTile("전체", members.count)
@@ -263,6 +260,37 @@ struct AdminMemberListView: View {
 
     private var unreadAlertCount: Int {
         alertStore.unreadCount(requestedBy: auth.currentUser?.id)
+    }
+
+    /// 기본 관리자 비밀번호(해시가 소스코드에 공개됨)를 쓰는 동안 표시하는 변경 안내
+    private var defaultPasswordWarning: some View {
+        Button { showPasswordSheet = true } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "exclamationmark.shield.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.red)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("기본 관리자 비밀번호를 사용 중이에요")
+                        .font(.sonjuBody.weight(.semibold))
+                        .foregroundColor(.sonjuText)
+                    Text("앱에 기본으로 들어 있는 비밀번호라 다른 사람이 알 수 있어요. 눌러서 새 비밀번호로 바꿔주세요.")
+                        .font(.sonjuCaption)
+                        .foregroundColor(.sonjuSecondary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.sonjuSecondary)
+                    .padding(.top, 4)
+            }
+            .padding(16)
+            .background(Color.red.opacity(0.08))
+            .cornerRadius(16)
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.red.opacity(0.25), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private var alertCenterEntry: some View {

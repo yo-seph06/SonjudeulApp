@@ -35,11 +35,14 @@ class BookingStore: ObservableObject {
     init() { load() }
 
     private func save() {
+        try? persist()
+    }
+
+    private func persist() throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        if let data = try? encoder.encode(bookings) {
-            try? data.write(to: fileURL, options: .atomic)
-        }
+        let data = try encoder.encode(bookings)
+        try data.write(to: fileURL, options: .atomic)
     }
 
     private func load() {
@@ -176,6 +179,69 @@ class BookingStore: ObservableObject {
         }
     }
 
+    // MARK: - 관리자 (방문 일정 관리)
+
+    /// 방문 완료 기록은 평점·리포트·멘토 통계에 쓰이므로 관리자도 바꿀 수 없다.
+    static func isAdminEditable(_ booking: BookingRecord) -> Bool {
+        booking.status != "방문 완료" && !booking.reportWritten
+    }
+
+    /// 예약 화면(BookingCompleteView)과 같은 날짜 표시 형식
+    static func displayDateText(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        f.dateFormat = "yyyy년 M월 d일 (E) a h시"
+        return f.string(from: date)
+    }
+
+    /// 관리자만 전체 방문 일정을 조회할 수 있다. 요청자의 권한은 회원 저장소 기준으로 다시 확인한다.
+    func adminVisits(requestedBy adminId: UUID?, userStore: UserStore = .shared) throws -> [BookingRecord] {
+        guard userStore.isAdmin(adminId) else { throw VisitAdminError.notAuthorized }
+        return bookings
+    }
+
+    /// 미완료 방문 일정의 날짜·시간만 바꾼다. 다른 항목과 다른 일정은 그대로 둔다.
+    /// 알림은 해당 회원이 다음에 로그인할 때 바뀐 시간으로 다시 등록된다.
+    func adminReschedule(id: UUID, to newDate: Date, requestedBy adminId: UUID?,
+                         userStore: UserStore = .shared, now: Date = Date()) throws {
+        guard userStore.isAdmin(adminId) else { throw VisitAdminError.notAuthorized }
+        guard let idx = bookings.firstIndex(where: { $0.id == id }) else { throw VisitAdminError.notFound }
+        guard Self.isAdminEditable(bookings[idx]) else { throw VisitAdminError.completed }
+        guard newDate > now else { throw VisitAdminError.pastDate }
+
+        let previous = bookings[idx]
+        let updated = BookingRecord(id: previous.id, date: Self.displayDateText(newDate), rawDate: newDate,
+                                    plan: previous.plan, status: previous.status,
+                                    mentorId: previous.mentorId, mentorName: previous.mentorName,
+                                    childId: previous.childId, rating: previous.rating,
+                                    reviewComment: previous.reviewComment, reportWritten: previous.reportWritten)
+        bookings[idx] = updated
+        do {
+            try persist()
+        } catch {
+            bookings[idx] = previous
+            throw VisitAdminError.saveFailed
+        }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["visit-1h-\(id.uuidString)"])
+    }
+
+    /// 미완료 방문 일정 1건만 삭제한다.
+    func adminDelete(id: UUID, requestedBy adminId: UUID?, userStore: UserStore = .shared) throws {
+        guard userStore.isAdmin(adminId) else { throw VisitAdminError.notAuthorized }
+        guard let idx = bookings.firstIndex(where: { $0.id == id }) else { throw VisitAdminError.notFound }
+        guard Self.isAdminEditable(bookings[idx]) else { throw VisitAdminError.completed }
+
+        let previous = bookings
+        bookings.remove(at: idx)
+        do {
+            try persist()
+        } catch {
+            bookings = previous
+            throw VisitAdminError.saveFailed
+        }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["visit-1h-\(id.uuidString)"])
+    }
+
     // MARK: - Notifications
 
     private func scheduleOneHourBeforeNotification(booking: BookingRecord) {
@@ -214,5 +280,23 @@ class BookingStore: ObservableObject {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         UNUserNotificationCenter.current().add(
             UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger))
+    }
+}
+
+enum VisitAdminError: Error, Equatable {
+    case notAuthorized
+    case notFound
+    case completed
+    case pastDate
+    case saveFailed
+
+    var message: String {
+        switch self {
+        case .notAuthorized: return "관리자만 방문 일정을 관리할 수 있어요."
+        case .notFound:      return "이미 삭제된 일정이에요. 목록을 새로고침해주세요."
+        case .completed:     return "방문 완료된 일정은 수정하거나 삭제할 수 없어요."
+        case .pastDate:      return "지금 이후의 날짜와 시간을 선택해주세요."
+        case .saveFailed:    return "변경 사항을 저장하지 못했어요. 다시 시도해주세요."
+        }
     }
 }

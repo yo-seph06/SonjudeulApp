@@ -2,7 +2,8 @@ import Foundation
 import UserNotifications
 
 class ScheduleStore: ObservableObject {
-    @Published var events: [ScheduleEvent] = []
+    /// 개인 일정은 작성자 본인만 볼 수 있으므로 저장소 밖에서 전체 목록을 직접 읽지 못하게 한다.
+    @Published private var events: [ScheduleEvent] = []
 
     private var fileURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -51,6 +52,14 @@ class ScheduleStore: ObservableObject {
 
     func upcomingEvents(ownerId: UUID?) -> [ScheduleEvent] {
         events(forOwner: ownerId).filter { $0.date > Date() }
+    }
+
+    /// 관리자용: 개인 일정은 제목·메모 없이 건수만 돌려준다. 관리자가 아니면 nil.
+    func personalScheduleCounts(requestedBy adminId: UUID?, userStore: UserStore = .shared,
+                                now: Date = Date()) -> (total: Int, upcoming: Int)? {
+        guard userStore.isAdmin(adminId) else { return nil }
+        let owned = events.filter { $0.ownerId != nil }
+        return (owned.count, owned.filter { $0.date > now }.count)
     }
 
     func removeEvents(forOwner ownerId: UUID) {

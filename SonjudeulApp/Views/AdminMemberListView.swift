@@ -27,6 +27,7 @@ struct AdminMemberListView: View {
     @State private var showLogoutAlert = false
     @State private var showPasswordSheet = false
     @State private var showLinkManagement = false
+    @State private var showScheduleManagement = false
 
     enum Filter: String, CaseIterable {
         case all = "전체", child = "자녀", mentor = "멘토", pending = "탈퇴 대기"
@@ -90,6 +91,9 @@ struct AdminMemberListView: View {
                     .padding(.horizontal, 24)
 
                     linkManagementEntry
+                        .padding(.horizontal, 16)
+
+                    scheduleManagementEntry
                         .padding(.horizontal, 16)
 
                     if !pendingMembers.isEmpty {
@@ -159,11 +163,17 @@ struct AdminMemberListView: View {
         .navigationDestination(isPresented: $showLinkManagement) {
             AdminLinkManagementView()
         }
+        .navigationDestination(isPresented: $showScheduleManagement) {
+            AdminScheduleManagementView()
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button { showLinkManagement = true } label: {
                         Label("자녀·멘토 연결 관리", systemImage: "link")
+                    }
+                    Button { showScheduleManagement = true } label: {
+                        Label("일정 관리", systemImage: "calendar")
                     }
                     Button { showPasswordSheet = true } label: {
                         Label("관리자 비밀번호 변경", systemImage: "key.fill")
@@ -229,15 +239,23 @@ struct AdminMemberListView: View {
     }
 
     private var linkManagementEntry: some View {
-        Button { showLinkManagement = true } label: {
+        adminMenuEntry(title: "자녀·멘토 연결 관리", systemImage: "link") { showLinkManagement = true }
+    }
+
+    private var scheduleManagementEntry: some View {
+        adminMenuEntry(title: "일정 관리", systemImage: "calendar") { showScheduleManagement = true }
+    }
+
+    private func adminMenuEntry(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             HStack(spacing: 12) {
-                Image(systemName: "link")
+                Image(systemName: systemImage)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.sonjuPrimary)
                     .frame(width: 36, height: 36)
                     .background(Color.sonjuPrimary.opacity(0.12))
                     .cornerRadius(10)
-                Text("자녀·멘토 연결 관리")
+                Text(title)
                     .font(.sonjuHeadline)
                     .foregroundColor(.sonjuText)
                 Spacer(minLength: 8)

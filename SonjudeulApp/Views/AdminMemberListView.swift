@@ -82,10 +82,9 @@ struct AdminMemberListView: View {
             Color.sonjuBackground.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
+                VStack(spacing: 24) {
                     if auth.mustChangeAdminPassword {
                         defaultPasswordWarning
-                            .padding(.horizontal, 16)
                     }
 
                     // 요약
@@ -95,70 +94,63 @@ struct AdminMemberListView: View {
                         summaryTile("멘토", members.filter { $0.memberType == .mentor && !$0.isPendingDeletion }.count)
                         summaryTile("탈퇴 대기", pendingMembers.count)
                     }
-                    .padding(.horizontal, 24)
 
-                    alertCenterEntry
-                        .padding(.horizontal, 16)
-
-                    linkManagementEntry
-                        .padding(.horizontal, 16)
-
-                    scheduleManagementEntry
-                        .padding(.horizontal, 16)
+                    adminMenuCard
 
                     if !pendingMembers.isEmpty {
                         pendingSection
-                            .padding(.horizontal, 16)
                     }
 
-                    Picker("구분", selection: $filter) {
-                        ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 24)
+                    VStack(alignment: .leading, spacing: 12) {
+                        sectionTitle("회원 목록", trailing: "\(searched.count)명")
 
-                    searchField
-                        .padding(.horizontal, 16)
+                        Picker("구분", selection: $filter) {
+                            ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
 
-                    SonjuCard {
-                        VStack(spacing: 0) {
-                            MemberTableRow(number: "번호", role: "구분", name: "이름",
-                                           username: "아이디", date: "가입일", isHeader: true)
-                            Divider().background(Color.sonjuDivider)
+                        searchField
 
-                            if searched.isEmpty {
-                                Text(trimmedSearch.isEmpty ? "표시할 회원이 없어요" : "검색 결과가 없습니다.")
-                                    .font(.sonjuCaption)
-                                    .foregroundColor(.sonjuSecondary)
-                                    .padding(.vertical, 24)
-                            } else {
-                                ForEach(searched) { member in
-                                    NavigationLink(value: member.id) {
-                                        MemberTableRow(
-                                            number: "\(member.number)",
-                                            role: member.memberType.label,
-                                            name: member.name,
-                                            username: member.username,
-                                            date: member.createdAt.map(Self.dateText) ?? "-",
-                                            isPendingDeletion: member.isPendingDeletion
-                                        )
-                                        .contentShape(Rectangle())
-                                    }
-                                    .buttonStyle(.plain)
-                                    if member.id != searched.last?.id {
-                                        Divider().background(Color.sonjuDivider)
+                        SonjuCard {
+                            VStack(spacing: 0) {
+                                MemberTableRow(number: "번호", role: "구분", name: "이름",
+                                               username: "아이디", date: "가입일", isHeader: true)
+                                Divider().background(Color.sonjuDivider)
+
+                                if searched.isEmpty {
+                                    Text(trimmedSearch.isEmpty ? "표시할 회원이 없어요" : "검색 결과가 없습니다.")
+                                        .font(.sonjuCaption)
+                                        .foregroundColor(.sonjuSecondary)
+                                        .padding(.vertical, 24)
+                                } else {
+                                    ForEach(searched) { member in
+                                        NavigationLink(value: member.id) {
+                                            MemberTableRow(
+                                                number: "\(member.number)",
+                                                role: member.memberType.label,
+                                                name: member.name,
+                                                username: member.username,
+                                                date: member.createdAt.map(Self.dateText) ?? "-",
+                                                isPendingDeletion: member.isPendingDeletion
+                                            )
+                                            .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        if member.id != searched.last?.id {
+                                            Divider().background(Color.sonjuDivider)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
 
                     Text("비밀번호와 연락처 등 민감한 정보는 표시하지 않아요")
                         .font(.system(size: 11))
                         .foregroundColor(.sonjuSecondary)
                         .padding(.bottom, 32)
                 }
+                .padding(.horizontal, 16)
                 .padding(.top, 16)
             }
             .refreshable { reload() }
@@ -181,16 +173,14 @@ struct AdminMemberListView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
+                Button { showAlertCenter = true } label: {
+                    Image(systemName: unreadAlertCount > 0 ? "bell.badge.fill" : "bell")
+                        .foregroundColor(unreadAlertCount > 0 ? .sonjuDeep : .sonjuText)
+                }
+                .accessibilityLabel(unreadAlertCount > 0 ? "알림 센터, 읽지 않은 알림 \(unreadAlertCount)개" : "알림 센터")
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
-                    Button { showLinkManagement = true } label: {
-                        Label("자녀·멘토 연결 관리", systemImage: "link")
-                    }
-                    Button { showAlertCenter = true } label: {
-                        Label(unreadAlertCount > 0 ? "알림 센터 (\(unreadAlertCount))" : "알림 센터", systemImage: "bell")
-                    }
-                    Button { showScheduleManagement = true } label: {
-                        Label("일정 관리", systemImage: "calendar")
-                    }
                     Button { showPasswordSheet = true } label: {
                         Label("관리자 비밀번호 변경", systemImage: "key.fill")
                     }
@@ -198,7 +188,7 @@ struct AdminMemberListView: View {
                         Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "person.crop.circle")
                         .foregroundColor(.sonjuText)
                 }
             }
@@ -254,77 +244,77 @@ struct AdminMemberListView: View {
         }
     }
 
-    private var linkManagementEntry: some View {
-        adminMenuEntry(title: "자녀·멘토 연결 관리", systemImage: "link") { showLinkManagement = true }
+    /// 기본 관리자 비밀번호(해시가 소스코드에 공개됨)를 쓰는 동안 표시하는 변경 안내
+    private var defaultPasswordWarning: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.shield.fill")
+                .foregroundColor(.red)
+            Text("기본 관리자 비밀번호를 사용 중이에요")
+                .font(.sonjuCaption.weight(.semibold))
+                .foregroundColor(.sonjuText)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
+            Button("변경하기") { showPasswordSheet = true }
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.red.opacity(0.85))
+                .cornerRadius(20)
+                .fixedSize()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.red.opacity(0.08))
+        .cornerRadius(14)
     }
 
     private var unreadAlertCount: Int {
         alertStore.unreadCount(requestedBy: auth.currentUser?.id)
     }
 
-    /// 기본 관리자 비밀번호(해시가 소스코드에 공개됨)를 쓰는 동안 표시하는 변경 안내
-    private var defaultPasswordWarning: some View {
-        Button { showPasswordSheet = true } label: {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "exclamationmark.shield.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.red)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("기본 관리자 비밀번호를 사용 중이에요")
-                        .font(.sonjuBody.weight(.semibold))
-                        .foregroundColor(.sonjuText)
-                    Text("앱에 기본으로 들어 있는 비밀번호라 다른 사람이 알 수 있어요. 눌러서 새 비밀번호로 바꿔주세요.")
-                        .font(.sonjuCaption)
-                        .foregroundColor(.sonjuSecondary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.sonjuSecondary)
-                    .padding(.top, 4)
+    private var adminMenuCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionTitle("관리 메뉴")
+            VStack(spacing: 0) {
+                menuRow(title: "알림 센터", systemImage: "bell.fill", badge: unreadAlertCount) { showAlertCenter = true }
+                Divider().background(Color.sonjuDivider).padding(.leading, 64)
+                menuRow(title: "자녀·멘토 연결 관리", systemImage: "link") { showLinkManagement = true }
+                Divider().background(Color.sonjuDivider).padding(.leading, 64)
+                menuRow(title: "일정 관리", systemImage: "calendar") { showScheduleManagement = true }
             }
-            .padding(16)
-            .background(Color.red.opacity(0.08))
+            .background(Color.sonjuCard)
             .cornerRadius(16)
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.red.opacity(0.25), lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 3)
         }
-        .buttonStyle(.plain)
     }
 
-    private var alertCenterEntry: some View {
-        adminMenuEntry(title: "알림 센터", systemImage: "bell", badge: unreadAlertCount) { showAlertCenter = true }
-    }
-
-    private var scheduleManagementEntry: some View {
-        adminMenuEntry(title: "일정 관리", systemImage: "calendar") { showScheduleManagement = true }
-    }
-
-    private func adminMenuEntry(title: String, systemImage: String, badge: Int = 0,
-                                action: @escaping () -> Void) -> some View {
+    private func menuRow(title: String, systemImage: String, badge: Int = 0,
+                         action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.sonjuPrimary)
                     .frame(width: 36, height: 36)
                     .background(Color.sonjuPrimary.opacity(0.12))
                     .cornerRadius(10)
                 Text(title)
-                    .font(.sonjuHeadline)
+                    .font(.sonjuBody.weight(.medium))
                     .foregroundColor(.sonjuText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Spacer(minLength: 8)
                 if badge > 0 {
-                    Text("읽지 않음 \(badge)")
+                    Text("\(badge)")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .frame(minWidth: 22, minHeight: 22)
                         .background(Color.sonjuDeep)
-                        .cornerRadius(20)
-                        .lineLimit(1)
-                        .fixedSize()
+                        .clipShape(Capsule())
+                        .accessibilityLabel("읽지 않은 알림 \(badge)개")
                 }
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
@@ -332,11 +322,24 @@ struct AdminMemberListView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.sonjuCard)
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 3)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private func sectionTitle(_ title: String, trailing: String? = nil) -> some View {
+        HStack {
+            Text(title)
+                .font(.sonjuHeadline)
+                .foregroundColor(.sonjuText)
+            Spacer()
+            if let trailing {
+                Text(trailing)
+                    .font(.sonjuCaption)
+                    .foregroundColor(.sonjuSecondary)
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     private var searchField: some View {

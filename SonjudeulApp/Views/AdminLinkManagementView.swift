@@ -301,6 +301,11 @@ private struct AdminMemberLinkDetailView: View {
     private func unlink(_ target: PendingUnlink) {
         do {
             try linkStore.unlink(linkId: target.id, requestedBy: auth.currentUser?.id)
+            AdminAlertStore.shared.record(
+                key: "unlink:\(target.id)", category: .adminAction, title: "자녀·멘토 연결 해제",
+                message: "자녀 \(target.child.name)(\(target.child.username))님과 멘토 \(target.mentor.name)(\(target.mentor.username))님의 연결을 해제했어요.",
+                target: .linkManagement, isRead: true,
+                relatedMemberIds: [target.child.id, target.mentor.id])
             errorMessage = nil
         } catch let error as MemberLinkError {
             errorMessage = error.message
@@ -434,7 +439,13 @@ private struct LinkCandidatePicker: View {
     private func link(_ other: MemberSummary) {
         let (childId, mentorId) = side == .child ? (target.id, other.id) : (other.id, target.id)
         do {
-            try linkStore.link(childId: childId, mentorId: mentorId, requestedBy: auth.currentUser?.id)
+            let link = try linkStore.link(childId: childId, mentorId: mentorId, requestedBy: auth.currentUser?.id)
+            let (child, mentor) = side == .child ? (target, other) : (other, target)
+            AdminAlertStore.shared.record(
+                key: "link:\(link.id)", category: .adminAction, title: "자녀·멘토 연결",
+                message: "자녀 \(child.name)(\(child.username))님과 멘토 \(mentor.name)(\(mentor.username))님을 연결했어요.",
+                occurredAt: link.createdAt, target: .linkManagement, isRead: true,
+                relatedMemberIds: [child.id, mentor.id])
             dismiss()
         } catch let error as MemberLinkError {
             errorMessage = error.message

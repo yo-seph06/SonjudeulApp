@@ -326,6 +326,10 @@ private struct AdminVisitDetailView: View {
     private func delete(_ visit: BookingRecord) {
         do {
             try bookingStore.adminDelete(id: visit.id, requestedBy: auth.currentUser?.id)
+            AdminAlertStore.shared.record(
+                key: "visit-delete:\(visit.id)", category: .adminAction, title: "방문 일정 삭제",
+                message: "\(VisitText.title(visit)) 일정(\(visit.date))을 삭제했어요.",
+                target: .scheduleManagement, isRead: true)
             errorMessage = nil
             dismiss()
         } catch let error as VisitAdminError {
@@ -432,6 +436,11 @@ private struct VisitRescheduleView: View {
     private func save() {
         do {
             try bookingStore.adminReschedule(id: visit.id, to: newDate, requestedBy: auth.currentUser?.id)
+            AdminAlertStore.shared.record(
+                key: "visit-reschedule:\(visit.id):\(Int(newDate.timeIntervalSince1970))", category: .adminAction,
+                title: "방문 일정 변경",
+                message: "\(VisitText.title(visit)) 일정을 \(visit.date)에서 \(BookingStore.displayDateText(newDate))(으)로 변경했어요.",
+                target: .scheduleManagement, isRead: true)
             dismiss()
         } catch let error as VisitAdminError {
             errorMessage = error.message

@@ -38,6 +38,7 @@ enum AccountPurger {
                                      reportStore: ReportStore,
                                      scheduleStore: ScheduleStore,
                                      linkStore: MemberLinkStore = .shared,
+                                     alertStore: AdminAlertStore = .shared,
                                      now: Date = Date()) -> [UUID] {
         let expired = userStore.accountsPastDeletionDate(now: now)
         guard !expired.isEmpty else { return [] }
@@ -55,6 +56,12 @@ enum AccountPurger {
         let ids = expired.map(\.id)
         linkStore.removeLinks(forDeletedMembers: Set(ids))
         userStore.permanentlyDelete(ids: ids, now: now)
+        // 삭제된 회원의 개인정보는 남기지 않고 건수만 기록한다
+        alertStore.anonymizeAlerts(forDeletedMembers: Set(ids))
+        alertStore.record(key: "purge:" + ids.map(\.uuidString).sorted().joined(separator: ","),
+                          category: .deletion, title: "탈퇴 계정 영구 삭제",
+                          message: "유예기간이 끝난 탈퇴 회원 \(ids.count)명의 계정과 관련 데이터가 영구 삭제되었어요.",
+                          occurredAt: now)
         return ids
     }
 }

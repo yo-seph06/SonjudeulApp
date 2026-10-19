@@ -28,6 +28,8 @@ struct AdminMemberListView: View {
     @State private var showPasswordSheet = false
     @State private var showLinkManagement = false
     @State private var showScheduleManagement = false
+    @State private var showAlertCenter = false
+    @ObservedObject private var alertStore = AdminAlertStore.shared
 
     enum Filter: String, CaseIterable {
         case all = "전체", child = "자녀", mentor = "멘토", pending = "탈퇴 대기"
@@ -89,6 +91,9 @@ struct AdminMemberListView: View {
                         summaryTile("탈퇴 대기", pendingMembers.count)
                     }
                     .padding(.horizontal, 24)
+
+                    alertCenterEntry
+                        .padding(.horizontal, 16)
 
                     linkManagementEntry
                         .padding(.horizontal, 16)
@@ -166,11 +171,17 @@ struct AdminMemberListView: View {
         .navigationDestination(isPresented: $showScheduleManagement) {
             AdminScheduleManagementView()
         }
+        .navigationDestination(isPresented: $showAlertCenter) {
+            AdminAlertCenterView()
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button { showLinkManagement = true } label: {
                         Label("자녀·멘토 연결 관리", systemImage: "link")
+                    }
+                    Button { showAlertCenter = true } label: {
+                        Label(unreadAlertCount > 0 ? "알림 센터 (\(unreadAlertCount))" : "알림 센터", systemImage: "bell")
                     }
                     Button { showScheduleManagement = true } label: {
                         Label("일정 관리", systemImage: "calendar")
@@ -242,11 +253,20 @@ struct AdminMemberListView: View {
         adminMenuEntry(title: "자녀·멘토 연결 관리", systemImage: "link") { showLinkManagement = true }
     }
 
+    private var unreadAlertCount: Int {
+        alertStore.unreadCount(requestedBy: auth.currentUser?.id)
+    }
+
+    private var alertCenterEntry: some View {
+        adminMenuEntry(title: "알림 센터", systemImage: "bell", badge: unreadAlertCount) { showAlertCenter = true }
+    }
+
     private var scheduleManagementEntry: some View {
         adminMenuEntry(title: "일정 관리", systemImage: "calendar") { showScheduleManagement = true }
     }
 
-    private func adminMenuEntry(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func adminMenuEntry(title: String, systemImage: String, badge: Int = 0,
+                                action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
@@ -259,6 +279,17 @@ struct AdminMemberListView: View {
                     .font(.sonjuHeadline)
                     .foregroundColor(.sonjuText)
                 Spacer(minLength: 8)
+                if badge > 0 {
+                    Text("읽지 않음 \(badge)")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.sonjuDeep)
+                        .cornerRadius(20)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.sonjuSecondary)
@@ -329,6 +360,8 @@ struct AdminMemberListView: View {
         do {
             members = try UserStore.shared.memberList(requestedBy: auth.currentUser?.id, now: now)
             accessDenied = false
+            // 회원·연결 데이터를 점검해 새로 생긴 알림만 추가한다 (기존 알림·읽음 상태는 유지)
+            alertStore.refresh(requestedBy: auth.currentUser?.id, now: now)
         } catch {
             members = []
             accessDenied = true
@@ -422,7 +455,7 @@ private struct PendingTableRow: View {
 // MARK: - 회원 상세
 
 /// 관리자 전용 회원 상세 (조회만 가능). 비밀번호·연락처 등 민감한 정보는 표시하지 않는다.
-private struct AdminMemberDetailView: View {
+struct AdminMemberDetailView: View {
     @EnvironmentObject var auth: AuthViewModel
     @EnvironmentObject var bookingStore: BookingStore
     @ObservedObject private var linkStore = MemberLinkStore.shared
@@ -687,6 +720,12 @@ private struct AdminPasswordChangeView: View {
                     AmberButton(title: "변경하기", disabled: !canSave) {
                         do {
                             try auth.changePassword(current: current, new: newPassword)
+                            let changedAt = Date()
+                            AdminAlertStore.shared.record(
+                                key: "admin-password:\(auth.currentUser?.id.uuidString ?? ""):\(Int(changedAt.timeIntervalSince1970))",
+                                category: .security, title: "관리자 비밀번호 변경",
+                                message: "관리자 계정 \(auth.currentUser?.username ?? "")의 비밀번호가 변경되었어요. 본인이 변경하지 않았다면 즉시 비밀번호를 다시 바꿔주세요.",
+                                occurredAt: changedAt)
                             done = true
                             message = "비밀번호가 변경되었어요"
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }

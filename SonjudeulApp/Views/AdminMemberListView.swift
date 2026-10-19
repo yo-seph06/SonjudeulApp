@@ -23,6 +23,7 @@ struct AdminMemberListView: View {
     @State private var now = Date()
     @State private var accessDenied = false
     @State private var filter: Filter = .all
+    @State private var searchText = ""
     @State private var showLogoutAlert = false
     @State private var showPasswordSheet = false
 
@@ -41,6 +42,20 @@ struct AdminMemberListView: View {
         case .child:   return members.filter { $0.memberType == .child && !$0.isPendingDeletion }
         case .mentor:  return members.filter { $0.memberType == .mentor && !$0.isPendingDeletion }
         case .pending: return pendingMembers
+        }
+    }
+
+    private var trimmedSearch: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 선택한 필터 안에서 이름 또는 아이디로 검색 (대소문자 구분 없음)
+    private var searched: [MemberSummary] {
+        let query = trimmedSearch
+        guard !query.isEmpty else { return filtered }
+        return filtered.filter {
+            $0.name.localizedCaseInsensitiveContains(query)
+                || $0.username.localizedCaseInsensitiveContains(query)
         }
     }
 
@@ -84,28 +99,35 @@ struct AdminMemberListView: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 24)
 
+                    searchField
+                        .padding(.horizontal, 16)
+
                     SonjuCard {
                         VStack(spacing: 0) {
                             MemberTableRow(number: "번호", role: "구분", name: "이름",
                                            username: "아이디", date: "가입일", isHeader: true)
                             Divider().background(Color.sonjuDivider)
 
-                            if filtered.isEmpty {
-                                Text("표시할 회원이 없어요")
+                            if searched.isEmpty {
+                                Text(trimmedSearch.isEmpty ? "표시할 회원이 없어요" : "검색 결과가 없습니다.")
                                     .font(.sonjuCaption)
                                     .foregroundColor(.sonjuSecondary)
                                     .padding(.vertical, 24)
                             } else {
-                                ForEach(filtered) { member in
-                                    MemberTableRow(
-                                        number: "\(member.number)",
-                                        role: member.memberType.label,
-                                        name: member.name,
-                                        username: member.username,
-                                        date: member.createdAt.map(Self.dateText) ?? "-",
-                                        isPendingDeletion: member.isPendingDeletion
-                                    )
-                                    if member.id != filtered.last?.id {
+                                ForEach(searched) { member in
+                                    NavigationLink(value: member.id) {
+                                        MemberTableRow(
+                                            number: "\(member.number)",
+                                            role: member.memberType.label,
+                                            name: member.name,
+                                            username: member.username,
+                                            date: member.createdAt.map(Self.dateText) ?? "-",
+                                            isPendingDeletion: member.isPendingDeletion
+                                        )
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    if member.id != searched.last?.id {
                                         Divider().background(Color.sonjuDivider)
                                     }
                                 }
@@ -125,6 +147,11 @@ struct AdminMemberListView: View {
         }
         .navigationTitle("회원 관리")
         .navigationBarTitleDisplayMode(.large)
+        // 목록 화면은 스택에 남아 있으므로 돌아와도 검색어와 필터가 유지된다
+        .navigationDestination(for: UUID.self) { memberId in
+            AdminMemberDetailView(member: members.first { $0.id == memberId },
+                                  allMembers: members, now: now)
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
@@ -191,6 +218,34 @@ struct AdminMemberListView: View {
         }
     }
 
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.sonjuSecondary)
+            TextField("이름 또는 아이디로 검색", text: $searchText)
+                .font(.sonjuBody)
+                .foregroundColor(.sonjuText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.sonjuSecondary)
+                }
+                .accessibilityLabel("검색어 지우기")
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 48)
+        .background(Color.white)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.sonjuDivider, lineWidth: 1)
+        )
+    }
+
     private func summaryTile(_ title: String, _ count: Int) -> some View {
         VStack(spacing: 4) {
             Text("\(count)")
@@ -233,7 +288,7 @@ struct AdminMemberListView: View {
         return f.string(from: date)
     }
 
-    private static func dateText(_ date: Date) -> String {
+    fileprivate static func dateText(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ko_KR")
         f.dateFormat = "yyyy-MM-dd"
@@ -307,6 +362,198 @@ private struct PendingTableRow: View {
         .lineLimit(1)
         .minimumScaleFactor(0.75)
         .padding(.vertical, isHeader ? 8 : 10)
+    }
+}
+
+// MARK: - 회원 상세
+
+/// 관리자 전용 회원 상세 (조회만 가능). 비밀번호·연락처 등 민감한 정보는 표시하지 않는다.
+private struct AdminMemberDetailView: View {
+    @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var bookingStore: BookingStore
+    /// 목록이 다시 불러와지는 동안 영구 삭제되면 nil
+    let member: MemberSummary?
+    let allMembers: [MemberSummary]
+    let now: Date
+
+    private static let noInfo = "정보 없음"
+
+    /// 예약 기록에서 연결된 상대 회원 (중복 제거, 처음 연결된 순서 유지)
+    private struct LinkedMember: Identifiable {
+        let id: UUID
+        let name: String
+        let username: String?
+    }
+
+    var body: some View {
+        Group {
+            if !auth.isAdmin {
+                AdminAccessDeniedView()
+            } else if let member {
+                content(member)
+            } else {
+                notFound
+            }
+        }
+        .navigationTitle("회원 상세")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func content(_ member: MemberSummary) -> some View {
+        ZStack {
+            Color.sonjuBackground.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    section("기본 정보") {
+                        infoRow("이름", member.name)
+                        rowDivider
+                        infoRow("아이디", member.username)
+                        rowDivider
+                        infoRow("회원 유형", member.memberType.label)
+                        rowDivider
+                        infoRow("가입일", member.createdAt.map(AdminMemberListView.dateText) ?? Self.noInfo)
+                        rowDivider
+                        infoRow("계정 상태", statusLabel(member.status),
+                                color: member.isPendingDeletion ? .red : .sonjuSuccess)
+                    }
+
+                    if member.isPendingDeletion {
+                        section("탈퇴 정보") {
+                            infoRow("탈퇴 요청일",
+                                    member.deletionRequestedAt.map(DeletionPolicy.dateTimeText) ?? Self.noInfo)
+                            rowDivider
+                            infoRow("삭제 예정일",
+                                    member.scheduledDeletionAt.map(DeletionPolicy.dateTimeText) ?? Self.noInfo)
+                            rowDivider
+                            infoRow("남은 기간",
+                                    member.scheduledDeletionAt.map {
+                                        DeletionPolicy.remainingLabel(until: $0, now: now)
+                                    } ?? Self.noInfo,
+                                    color: .sonjuDeep)
+                        }
+                    }
+
+                    switch member.memberType {
+                    case .child:  linkedSection("연결된 멘토", linkedMentors(of: member.id))
+                    case .mentor: linkedSection("연결된 자녀", linkedChildren(of: member.id))
+                    case .admin:  EmptyView()
+                    }
+
+                    Text("비밀번호와 연락처 등 민감한 정보는 표시하지 않아요")
+                        .font(.system(size: 11))
+                        .foregroundColor(.sonjuSecondary)
+                        .padding(.bottom, 32)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+            }
+        }
+    }
+
+    private var notFound: some View {
+        ZStack {
+            Color.sonjuBackground.ignoresSafeArea()
+            VStack(spacing: 14) {
+                Image(systemName: "person.crop.circle.badge.questionmark")
+                    .font(.system(size: 44))
+                    .foregroundColor(.sonjuPrimary.opacity(0.6))
+                Text("회원 정보를 찾을 수 없어요")
+                    .font(.sonjuHeadline)
+                    .foregroundColor(.sonjuText)
+                Text("이미 영구 삭제된 회원일 수 있어요")
+                    .font(.sonjuBody)
+                    .foregroundColor(.sonjuSecondary)
+            }
+            .padding(24)
+        }
+    }
+
+    // MARK: 연결 정보 (예약 기록 기준)
+
+    private func linkedMentors(of childId: UUID) -> [LinkedMember] {
+        var seen = Set<UUID>()
+        return bookingStore.bookings.compactMap { booking in
+            guard booking.childId == childId, let mentorId = booking.mentorId,
+                  seen.insert(mentorId).inserted else { return nil }
+            if let mentor = allMembers.first(where: { $0.id == mentorId }) {
+                return LinkedMember(id: mentorId, name: mentor.name, username: mentor.username)
+            }
+            // 명단에 없는 멘토는 예약에 저장된 이름만 표시한다
+            let name = booking.mentorName.trimmingCharacters(in: .whitespaces)
+            return LinkedMember(id: mentorId, name: name.isEmpty ? Self.noInfo : name, username: nil)
+        }
+    }
+
+    private func linkedChildren(of mentorId: UUID) -> [LinkedMember] {
+        var seen = Set<UUID>()
+        return bookingStore.bookings.compactMap { booking in
+            guard booking.mentorId == mentorId, let childId = booking.childId,
+                  seen.insert(childId).inserted else { return nil }
+            let child = allMembers.first { $0.id == childId }
+            return LinkedMember(id: childId, name: child?.name ?? Self.noInfo, username: child?.username)
+        }
+    }
+
+    private func linkedSection(_ title: String, _ linked: [LinkedMember]) -> some View {
+        section(title) {
+            if linked.isEmpty {
+                Text(Self.noInfo)
+                    .font(.sonjuBody)
+                    .foregroundColor(.sonjuSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+            } else {
+                ForEach(linked) { item in
+                    infoRow(item.name, item.username ?? Self.noInfo)
+                    if item.id != linked.last?.id { rowDivider }
+                }
+            }
+        }
+    }
+
+    // MARK: 공통 UI
+
+    private func section<Content: View>(_ title: String,
+                                        @ViewBuilder content: () -> Content) -> some View {
+        SonjuCard {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.sonjuHeadline)
+                    .foregroundColor(.sonjuText)
+                    .padding(.bottom, 8)
+                content()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func infoRow(_ label: String, _ value: String, color: Color = .sonjuText) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(label)
+                .font(.sonjuCaption)
+                .foregroundColor(.sonjuSecondary)
+                .frame(width: 84, alignment: .leading)
+            Text(value)
+                .font(.sonjuBody)
+                .foregroundColor(value == Self.noInfo ? .sonjuSecondary : color)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 10)
+    }
+
+    private var rowDivider: some View {
+        Divider().background(Color.sonjuDivider)
+    }
+
+    private func statusLabel(_ status: AccountStatus) -> String {
+        switch status {
+        case .active:          return "정상"
+        case .deletionPending: return "탈퇴 대기"
+        case .deleted:         return "삭제됨"
+        }
     }
 }
 

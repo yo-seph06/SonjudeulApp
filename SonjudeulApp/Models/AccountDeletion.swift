@@ -37,6 +37,7 @@ enum AccountPurger {
                                      bookingStore: BookingStore,
                                      reportStore: ReportStore,
                                      scheduleStore: ScheduleStore,
+                                     linkStore: MemberLinkStore = .shared,
                                      now: Date = Date()) -> [UUID] {
         let expired = userStore.accountsPastDeletionDate(now: now)
         guard !expired.isEmpty else { return [] }
@@ -52,6 +53,7 @@ enum AccountPurger {
             scheduleStore.removeEvents(forOwner: user.id)
         }
         let ids = expired.map(\.id)
+        linkStore.removeLinks(forDeletedMembers: Set(ids))
         userStore.permanentlyDelete(ids: ids, now: now)
         return ids
     }

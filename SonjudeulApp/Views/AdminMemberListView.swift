@@ -26,6 +26,7 @@ struct AdminMemberListView: View {
     @State private var searchText = ""
     @State private var showLogoutAlert = false
     @State private var showPasswordSheet = false
+    @State private var showLinkManagement = false
 
     enum Filter: String, CaseIterable {
         case all = "전체", child = "자녀", mentor = "멘토", pending = "탈퇴 대기"
@@ -87,6 +88,9 @@ struct AdminMemberListView: View {
                         summaryTile("탈퇴 대기", pendingMembers.count)
                     }
                     .padding(.horizontal, 24)
+
+                    linkManagementEntry
+                        .padding(.horizontal, 16)
 
                     if !pendingMembers.isEmpty {
                         pendingSection
@@ -152,9 +156,15 @@ struct AdminMemberListView: View {
             AdminMemberDetailView(member: members.first { $0.id == memberId },
                                   allMembers: members, now: now)
         }
+        .navigationDestination(isPresented: $showLinkManagement) {
+            AdminLinkManagementView()
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
+                    Button { showLinkManagement = true } label: {
+                        Label("자녀·멘토 연결 관리", systemImage: "link")
+                    }
                     Button { showPasswordSheet = true } label: {
                         Label("관리자 비밀번호 변경", systemImage: "key.fill")
                     }
@@ -216,6 +226,32 @@ struct AdminMemberListView: View {
                 }
             }
         }
+    }
+
+    private var linkManagementEntry: some View {
+        Button { showLinkManagement = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "link")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.sonjuPrimary)
+                    .frame(width: 36, height: 36)
+                    .background(Color.sonjuPrimary.opacity(0.12))
+                    .cornerRadius(10)
+                Text("자녀·멘토 연결 관리")
+                    .font(.sonjuHeadline)
+                    .foregroundColor(.sonjuText)
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.sonjuSecondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.sonjuCard)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 3)
+        }
+        .buttonStyle(.plain)
     }
 
     private var searchField: some View {
@@ -371,6 +407,7 @@ private struct PendingTableRow: View {
 private struct AdminMemberDetailView: View {
     @EnvironmentObject var auth: AuthViewModel
     @EnvironmentObject var bookingStore: BookingStore
+    @ObservedObject private var linkStore = MemberLinkStore.shared
     /// 목록이 다시 불러와지는 동안 영구 삭제되면 nil
     let member: MemberSummary?
     let allMembers: [MemberSummary]
@@ -434,9 +471,14 @@ private struct AdminMemberDetailView: View {
                         }
                     }
 
+                    // 관리자가 지정한 연결 (자녀·멘토 연결 관리)
+                    if let side = MemberSide(member.memberType) {
+                        adminLinkSection(member, side: side)
+                    }
+
                     switch member.memberType {
-                    case .child:  linkedSection("연결된 멘토", linkedMentors(of: member.id))
-                    case .mentor: linkedSection("연결된 자녀", linkedChildren(of: member.id))
+                    case .child:  linkedSection("예약 기록상 멘토", linkedMentors(of: member.id))
+                    case .mentor: linkedSection("예약 기록상 자녀", linkedChildren(of: member.id))
                     case .admin:  EmptyView()
                     }
 
@@ -492,6 +534,24 @@ private struct AdminMemberDetailView: View {
                   seen.insert(childId).inserted else { return nil }
             let child = allMembers.first { $0.id == childId }
             return LinkedMember(id: childId, name: child?.name ?? Self.noInfo, username: child?.username)
+        }
+    }
+
+    private func adminLinkSection(_ member: MemberSummary, side: MemberSide) -> some View {
+        let linked = LinkLookup.counterparts(of: member, in: allMembers, store: linkStore)
+        return section("연결된 \(side.counterpart.title)") {
+            if linked.isEmpty {
+                Text(side.emptyMessage)
+                    .font(.sonjuBody)
+                    .foregroundColor(.sonjuSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+            } else {
+                ForEach(linked) { other in
+                    infoRow(other.name, other.username)
+                    if other.id != linked.last?.id { rowDivider }
+                }
+            }
         }
     }
 

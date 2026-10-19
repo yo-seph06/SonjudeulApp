@@ -59,6 +59,8 @@
 		B052 /* AccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A052 /* AccountDeletion.swift */; };
 		B053 /* ContactValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A053 /* ContactValidation.swift */; };
 		B054 /* DeviceCalendarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A054 /* DeviceCalendarStore.swift */; };
+		B055 /* MemberLinkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055 /* MemberLinkStore.swift */; };
+		B056 /* AdminLinkManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A056 /* AdminLinkManagementView.swift */; };
 		B051 /* AdminMemberListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A051 /* AdminMemberListView.swift */; };
 		B050 /* WithdrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A050 /* WithdrawView.swift */; };
 		B049 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A049 /* SessionStore.swift */; };
@@ -123,6 +125,8 @@
 		A052 /* AccountDeletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletion.swift; sourceTree = "<group>"; };
 		A053 /* ContactValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactValidation.swift; sourceTree = "<group>"; };
 		A054 /* DeviceCalendarStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCalendarStore.swift; sourceTree = "<group>"; };
+		A055 /* MemberLinkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberLinkStore.swift; sourceTree = "<group>"; };
+		A056 /* AdminLinkManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLinkManagementView.swift; sourceTree = "<group>"; };
 		A051 /* AdminMemberListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminMemberListView.swift; sourceTree = "<group>"; };
 		A050 /* WithdrawView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithdrawView.swift; sourceTree = "<group>"; };
 		A049 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -244,6 +248,7 @@
 				A052 /* AccountDeletion.swift */,
 				A053 /* ContactValidation.swift */,
 				A054 /* DeviceCalendarStore.swift */,
+				A055 /* MemberLinkStore.swift */,
 				A049 /* SessionStore.swift */,
 				A048 /* PasswordHasher.swift */,
 				A040 /* BookingStore.swift */,
@@ -298,6 +303,7 @@
 				GRP_MENTOR /* Mentor */,
 				A044 /* ProfileEditView.swift */,
 				A051 /* AdminMemberListView.swift */,
+				A056 /* AdminLinkManagementView.swift */,
 				A050 /* WithdrawView.swift */,
 				CAL1 /* CalendarView.swift */,
 				4321AAA26902FA59CBB4732B /* ScheduleCalendarView.swift */,
@@ -448,6 +454,8 @@
 				B052 /* AccountDeletion.swift in Sources */,
 				B053 /* ContactValidation.swift in Sources */,
 				B054 /* DeviceCalendarStore.swift in Sources */,
+				B055 /* MemberLinkStore.swift in Sources */,
+				B056 /* AdminLinkManagementView.swift in Sources */,
 				B051 /* AdminMemberListView.swift in Sources */,
 				B050 /* WithdrawView.swift in Sources */,
 				B049 /* SessionStore.swift in Sources */,

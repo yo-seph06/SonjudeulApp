@@ -16,22 +16,31 @@ struct AdminRootView: View {
 
 struct AdminMemberListView: View {
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var bookingStore: BookingStore
+    @EnvironmentObject var reportStore: ReportStore
+    @EnvironmentObject var scheduleStore: ScheduleStore
     @State private var members: [MemberSummary] = []
+    @State private var now = Date()
     @State private var accessDenied = false
     @State private var filter: Filter = .all
     @State private var showLogoutAlert = false
     @State private var showPasswordSheet = false
 
     enum Filter: String, CaseIterable {
-        case all = "전체", child = "자녀", mentor = "멘토", withdrawn = "탈퇴"
+        case all = "전체", child = "자녀", mentor = "멘토", pending = "탈퇴 대기"
+    }
+
+    private var pendingMembers: [MemberSummary] {
+        members.filter(\.isPendingDeletion)
+            .sorted { ($0.scheduledDeletionAt ?? .distantFuture) < ($1.scheduledDeletionAt ?? .distantFuture) }
     }
 
     private var filtered: [MemberSummary] {
         switch filter {
-        case .all:       return members
-        case .child:     return members.filter { $0.role == .child && !$0.isWithdrawn }
-        case .mentor:    return members.filter { $0.role == .mentor && !$0.isWithdrawn }
-        case .withdrawn: return members.filter { $0.isWithdrawn }
+        case .all:     return members
+        case .child:   return members.filter { $0.memberType == .child && !$0.isPendingDeletion }
+        case .mentor:  return members.filter { $0.memberType == .mentor && !$0.isPendingDeletion }
+        case .pending: return pendingMembers
         }
     }
 
@@ -45,6 +54,8 @@ struct AdminMemberListView: View {
             }
         }
         .onAppear(perform: reload)
+        // 화면을 켜둔 동안에도 1분마다 남은 기간을 다시 계산하고, 기한이 지난 계정을 영구 삭제한다
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in reload() }
     }
 
     private var content: some View {
@@ -56,11 +67,16 @@ struct AdminMemberListView: View {
                     // 요약
                     HStack(spacing: 10) {
                         summaryTile("전체", members.count)
-                        summaryTile("자녀", members.filter { $0.role == .child && !$0.isWithdrawn }.count)
-                        summaryTile("멘토", members.filter { $0.role == .mentor && !$0.isWithdrawn }.count)
-                        summaryTile("탈퇴", members.filter { $0.isWithdrawn }.count)
+                        summaryTile("자녀", members.filter { $0.memberType == .child && !$0.isPendingDeletion }.count)
+                        summaryTile("멘토", members.filter { $0.memberType == .mentor && !$0.isPendingDeletion }.count)
+                        summaryTile("탈퇴 대기", pendingMembers.count)
                     }
                     .padding(.horizontal, 24)
+
+                    if !pendingMembers.isEmpty {
+                        pendingSection
+                            .padding(.horizontal, 16)
+                    }
 
                     Picker("구분", selection: $filter) {
                         ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
@@ -83,11 +99,11 @@ struct AdminMemberListView: View {
                                 ForEach(filtered) { member in
                                     MemberTableRow(
                                         number: "\(member.number)",
-                                        role: member.role == .child ? "자녀" : "멘토",
+                                        role: member.memberType.label,
                                         name: member.name,
                                         username: member.username,
                                         date: member.createdAt.map(Self.dateText) ?? "-",
-                                        isWithdrawn: member.isWithdrawn
+                                        isPendingDeletion: member.isPendingDeletion
                                     )
                                     if member.id != filtered.last?.id {
                                         Divider().background(Color.sonjuDivider)
@@ -136,6 +152,45 @@ struct AdminMemberListView: View {
         }
     }
 
+    /// 탈퇴 대기 회원: 이름 · 유형 · 상태 · 탈퇴 신청일 · 영구 삭제까지
+    private var pendingSection: some View {
+        SonjuCard {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("탈퇴 대기 회원")
+                        .font(.sonjuHeadline)
+                        .foregroundColor(.sonjuText)
+                    Spacer()
+                    Text("\(DeletionPolicy.gracePeriodDays)일 후 영구 삭제")
+                        .font(.sonjuCaption)
+                        .foregroundColor(.sonjuSecondary)
+                }
+                .padding(.bottom, 10)
+
+                PendingTableRow(name: "이름", type: "유형", status: "상태",
+                                requested: "탈퇴 신청일", remaining: "영구 삭제까지", isHeader: true)
+                Divider().background(Color.sonjuDivider)
+                ForEach(pendingMembers) { member in
+                    PendingTableRow(
+                        name: member.name,
+                        type: member.memberType.label,
+                        status: "탈퇴 대기",
+                        requested: member.deletionRequestedAt.map(Self.shortDateText) ?? "-",
+                        remaining: member.scheduledDeletionAt.map {
+                            DeletionPolicy.remainingLabel(until: $0, now: now)
+                        } ?? "-",
+                        detail: member.scheduledDeletionAt.map {
+                            "\(member.username) · \(DeletionPolicy.dateTimeText($0)) 삭제 예정"
+                        }
+                    )
+                    if member.id != pendingMembers.last?.id {
+                        Divider().background(Color.sonjuDivider)
+                    }
+                }
+            }
+        }
+    }
+
     private func summaryTile(_ title: String, _ count: Int) -> some View {
         VStack(spacing: 4) {
             Text("\(count)")
@@ -153,13 +208,29 @@ struct AdminMemberListView: View {
     }
 
     private func reload() {
+        now = Date()
+        guard auth.isAdmin else {
+            members = []
+            accessDenied = true
+            return
+        }
+        // 화면에서 숨기기 전에 실제 데이터에서 유예기간이 끝난 계정을 영구 삭제한다
+        AccountPurger.purgeExpiredAccounts(bookingStore: bookingStore, reportStore: reportStore,
+                                           scheduleStore: scheduleStore, now: now)
         do {
-            members = try UserStore.shared.memberList(requestedBy: auth.currentUser?.id)
+            members = try UserStore.shared.memberList(requestedBy: auth.currentUser?.id, now: now)
             accessDenied = false
         } catch {
             members = []
             accessDenied = true
         }
+    }
+
+    private static func shortDateText(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        f.dateFormat = "MM/dd HH:mm"
+        return f.string(from: date)
     }
 
     private static func dateText(_ date: Date) -> String {
@@ -177,7 +248,7 @@ private struct MemberTableRow: View {
     let username: String
     let date: String
     var isHeader = false
-    var isWithdrawn = false
+    var isPendingDeletion = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -186,21 +257,56 @@ private struct MemberTableRow: View {
                 if isHeader {
                     Text(role)
                 } else {
-                    BadgeView(text: isWithdrawn ? "탈퇴" : role,
-                              color: isWithdrawn ? .sonjuSecondary
+                    BadgeView(text: isPendingDeletion ? "탈퇴 대기" : role,
+                              color: isPendingDeletion ? .red
                                   : (role == "멘토" ? Color(hex: "#2196F3") : .sonjuPrimary))
                 }
             }
-            .frame(width: 52, alignment: .leading)
+            .frame(width: isPendingDeletion ? 70 : 52, alignment: .leading)
             Text(name).frame(maxWidth: .infinity, alignment: .leading)
             Text(username).frame(maxWidth: .infinity, alignment: .leading)
             Text(date).frame(width: 78, alignment: .trailing)
         }
         .font(isHeader ? .system(size: 12, weight: .semibold) : .system(size: 13))
-        .foregroundColor(isHeader ? .sonjuSecondary : (isWithdrawn ? .sonjuSecondary : .sonjuText))
+        .foregroundColor(isHeader ? .sonjuSecondary : (isPendingDeletion ? .sonjuSecondary : .sonjuText))
         .lineLimit(1)
         .minimumScaleFactor(0.8)
         .padding(.vertical, isHeader ? 8 : 12)
+    }
+}
+
+private struct PendingTableRow: View {
+    let name: String
+    let type: String
+    let status: String
+    let requested: String
+    let remaining: String
+    var detail: String? = nil
+    var isHeader = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Text(name).frame(maxWidth: .infinity, alignment: .leading)
+                Text(type).frame(width: 34, alignment: .leading)
+                Text(status).frame(width: 56, alignment: .leading)
+                    .foregroundColor(isHeader ? .sonjuSecondary : .red)
+                Text(requested).frame(width: 74, alignment: .leading)
+                Text(remaining).frame(width: 78, alignment: .trailing)
+                    .foregroundColor(isHeader ? .sonjuSecondary : .sonjuDeep)
+                    .fontWeight(isHeader ? .semibold : .bold)
+            }
+            if let detail {
+                Text(detail)
+                    .font(.system(size: 11))
+                    .foregroundColor(.sonjuSecondary)
+            }
+        }
+        .font(isHeader ? .system(size: 12, weight: .semibold) : .system(size: 13))
+        .foregroundColor(isHeader ? .sonjuSecondary : .sonjuText)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+        .padding(.vertical, isHeader ? 8 : 10)
     }
 }
 
@@ -301,4 +407,7 @@ private struct AdminPasswordChangeView: View {
 #Preview {
     AdminRootView()
         .environmentObject(AuthViewModel())
+        .environmentObject(BookingStore())
+        .environmentObject(ReportStore())
+        .environmentObject(ScheduleStore())
 }

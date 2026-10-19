@@ -309,9 +309,12 @@ struct MentorScheduleView: View {
     @State private var pendingId: UUID? = nil
     @State private var profileBooking: BookingRecord? = nil
 
-    // 아직 멘토가 배정 안 된 신규 신청
+    // 아직 멘토가 배정 안 된 신규 신청 (정상 회원의 신청만, 탈퇴 대기 회원 신청은 숨김)
     private var pendingRequests: [BookingRecord] {
-        bookingStore.bookings.filter { $0.status == "멘토 찾는 중" }
+        bookingStore.bookings.filter {
+            $0.status == "멘토 찾는 중"
+            && $0.childId.flatMap { UserStore.shared.findUserById($0) } != nil
+        }
     }
 
     // 내가 수락한 확정 일정

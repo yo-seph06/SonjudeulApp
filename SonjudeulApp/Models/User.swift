@@ -11,6 +11,28 @@ enum UserAuthority: String, Codable {
     case user = "USER"
 }
 
+/// 계정 상태
+enum AccountStatus: String, Codable {
+    case active = "ACTIVE"                     // 정상
+    case deletionPending = "DELETION_PENDING"  // 탈퇴 신청 후 3일 유예 중 (로그인 시 복구 가능)
+    case deleted = "DELETED"                   // 영구 삭제 (저장소에서 제거됨)
+}
+
+/// 회원 유형: 역할(자녀/멘토)과 권한(관리자)을 합쳐 하나로 구분
+enum MemberType: String {
+    case child = "CHILD"
+    case mentor = "MENTOR"
+    case admin = "ADMIN"
+
+    var label: String {
+        switch self {
+        case .child:  return "자녀"
+        case .mentor: return "멘토"
+        case .admin:  return "관리자"
+        }
+    }
+}
+
 enum Gender: String, Codable, CaseIterable {
     case male = "남성"
     case female = "여성"
@@ -32,11 +54,26 @@ struct User: Identifiable, Codable {
     var university: String?
     /// 가입일 (이전 버전에서 가입한 회원은 nil)
     var createdAt: Date?
-    /// 탈퇴일. 값이 있으면 탈퇴(비활성) 회원
-    var withdrawnAt: Date?
+    var accountStatus: AccountStatus = .active
+    /// 탈퇴 신청 시각
+    var deletionRequestedAt: Date?
+    /// 영구 삭제 예정 시각 (탈퇴 신청 + 3일)
+    var scheduledDeletionAt: Date?
 
     var isAdmin: Bool { authority == .admin }
-    var isActive: Bool { withdrawnAt == nil }
+    var isActive: Bool { accountStatus == .active }
+    var isPendingDeletion: Bool { accountStatus == .deletionPending }
+    var memberType: MemberType {
+        if isAdmin { return .admin }
+        return role == .mentor ? .mentor : .child
+    }
+
+    /// 유예기간이 끝나 영구 삭제 대상인지
+    func isPastDeletionDate(now: Date = Date()) -> Bool {
+        guard isPendingDeletion else { return accountStatus == .deleted }
+        guard let scheduledDeletionAt else { return true }
+        return scheduledDeletionAt <= now
+    }
 
     init(name: String, username: String, email: String, password: String, phone: String,
          role: UserRole, birthDate: Date, gender: Gender, profileImageData: Data? = nil,
@@ -69,8 +106,10 @@ struct User: Identifiable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case id, name, username, email, passwordHash, phone, role, authority
-        case birthDate, gender, profileImageData, university, createdAt, withdrawnAt
+        case birthDate, gender, profileImageData, university, createdAt
+        case accountStatus, deletionRequestedAt, scheduledDeletionAt
         case legacyPassword = "password"
+        case legacyWithdrawnAt = "withdrawnAt"
     }
 
     init(from decoder: Decoder) throws {
@@ -87,7 +126,16 @@ struct User: Identifiable, Codable {
         profileImageData = try c.decodeIfPresent(Data.self, forKey: .profileImageData)
         university = try c.decodeIfPresent(String.self, forKey: .university)
         createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt)
-        withdrawnAt = try c.decodeIfPresent(Date.self, forKey: .withdrawnAt)
+        deletionRequestedAt = try c.decodeIfPresent(Date.self, forKey: .deletionRequestedAt)
+        scheduledDeletionAt = try c.decodeIfPresent(Date.self, forKey: .scheduledDeletionAt)
+        if let status = try c.decodeIfPresent(AccountStatus.self, forKey: .accountStatus) {
+            accountStatus = status
+        } else if try c.decodeIfPresent(Date.self, forKey: .legacyWithdrawnAt) != nil {
+            // 이전 버전에서 즉시 탈퇴 처리된 계정은 이미 개인정보가 지워져 복구할 수 없으므로 삭제 대상
+            accountStatus = .deleted
+        } else {
+            accountStatus = .active
+        }
         if let hash = try c.decodeIfPresent(String.self, forKey: .passwordHash) {
             passwordHash = hash
         } else if let legacy = try c.decodeIfPresent(String.self, forKey: .legacyPassword) {
@@ -112,6 +160,8 @@ struct User: Identifiable, Codable {
         try c.encodeIfPresent(profileImageData, forKey: .profileImageData)
         try c.encodeIfPresent(university, forKey: .university)
         try c.encodeIfPresent(createdAt, forKey: .createdAt)
-        try c.encodeIfPresent(withdrawnAt, forKey: .withdrawnAt)
+        try c.encode(accountStatus, forKey: .accountStatus)
+        try c.encodeIfPresent(deletionRequestedAt, forKey: .deletionRequestedAt)
+        try c.encodeIfPresent(scheduledDeletionAt, forKey: .scheduledDeletionAt)
     }
 }

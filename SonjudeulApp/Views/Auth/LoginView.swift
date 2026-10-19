@@ -17,6 +17,8 @@ struct LoginView: View {
     @State private var identifier: String = ""
     @State private var password: String = ""
     @State private var errorMessage: String = ""
+    @State private var pendingDeletion: (requestedAt: Date, scheduledAt: Date)? = nil
+    @State private var showRestoreAlert = false
 
     var canLogin: Bool {
         !identifier.isEmpty && password.count >= 6
@@ -93,6 +95,10 @@ struct LoginView: View {
                             case .wrongRole:
                                 let roleLabel = role == .child ? "자녀" : "멘토"
                                 errorMessage = "\(roleLabel) 계정이 아니에요. 올바른 로그인 방식을 선택해주세요"
+                            case let .pendingDeletion(requestedAt, scheduledAt):
+                                errorMessage = ""
+                                pendingDeletion = (requestedAt, scheduledAt)
+                                showRestoreAlert = true
                             }
                         }
                     }
@@ -138,6 +144,26 @@ struct LoginView: View {
         }
         .sheet(isPresented: $showFindPassword) {
             FindPasswordView()
+        }
+        .alert("탈퇴한 계정입니다", isPresented: $showRestoreAlert) {
+            Button("취소", role: .cancel) {}
+            Button("복구") { restoreAccount() }
+        } message: {
+            if let pending = pendingDeletion {
+                Text("계정을 복구하시겠습니까?\n\n탈퇴 신청일: \(DeletionPolicy.dateTimeText(pending.requestedAt))\n영구 삭제 예정일: \(DeletionPolicy.dateTimeText(pending.scheduledAt))\n(\(DeletionPolicy.remainingLabel(until: pending.scheduledAt)))")
+            } else {
+                Text("계정을 복구하시겠습니까?")
+            }
+        }
+    }
+
+    private func restoreAccount() {
+        switch auth.restoreAccount(identifier: identifier, password: password, role: role) {
+        case .success:
+            errorMessage = ""
+        default:
+            // 그 사이 유예기간이 끝났거나 정보가 바뀐 경우
+            errorMessage = "계정을 복구할 수 없어요. 탈퇴 유예기간이 지났을 수 있어요"
         }
     }
 }

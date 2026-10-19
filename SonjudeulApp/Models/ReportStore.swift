@@ -21,8 +21,18 @@ class ReportStore: ObservableObject {
         reports.filter { $0.childId == id }
     }
 
-    func removeReports(forChild id: UUID) {
+    /// 영구 삭제된 자녀의 리포트(부모님 방문 기록)는 모두 삭제한다.
+    func purgeReports(forDeletedChild id: UUID) {
         reports.removeAll { $0.childId == id }
+        save()
+    }
+
+    /// 영구 삭제된 멘토가 쓴 리포트는 자녀의 기록이므로 남기고, 멘토 정보만 지운다.
+    func anonymizeReports(forDeletedMentor id: UUID) {
+        for idx in reports.indices where reports[idx].mentorId == id {
+            reports[idx].mentorId = nil
+            reports[idx].mentorName = "탈퇴한 멘토"
+        }
         save()
     }
 

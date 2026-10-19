@@ -203,7 +203,10 @@ struct ScheduleCalendarView: View {
 struct ScheduleEventCard: View {
     @EnvironmentObject var scheduleStore: ScheduleStore
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var deviceCalendar: DeviceCalendarStore
     let event: ScheduleEvent
+    @State private var confirmDelete = false
+    @State private var deleteError: String?
 
     private var timeText: String {
         let f = DateFormatter()
@@ -236,16 +239,46 @@ struct ScheduleEventCard: View {
                             .foregroundColor(.sonjuSecondary)
                             .lineLimit(1)
                     }
+                    if event.deviceEventId != nil {
+                        Label("휴대전화 캘린더에도 추가됨", systemImage: "iphone.gen3")
+                            .font(.system(size: 11))
+                            .foregroundColor(.sonjuSecondary)
+                    }
                 }
                 Spacer()
                 Button {
-                    scheduleStore.delete(id: event.id, ownerId: auth.currentUser?.id)
+                    if event.deviceEventId != nil && deviceCalendar.canWrite {
+                        confirmDelete = true
+                    } else {
+                        scheduleStore.delete(id: event.id, ownerId: auth.currentUser?.id)
+                    }
                 } label: {
                     Image(systemName: "trash")
                         .font(.system(size: 15))
                         .foregroundColor(.red.opacity(0.6))
                 }
             }
+        }
+        .confirmationDialog("휴대전화 캘린더에 추가한 일정도 삭제할까요?", isPresented: $confirmDelete,
+                            titleVisibility: .visible) {
+            Button("휴대전화 캘린더에서도 삭제", role: .destructive) {
+                // 기기 일정을 지우지 못하면 손주들 일정도 남겨 두고 알린다 (카드가 사라지면 안내를 볼 수 없음)
+                do {
+                    try deviceCalendar.removeExported(event)
+                    scheduleStore.delete(id: event.id, ownerId: auth.currentUser?.id)
+                } catch {
+                    deleteError = "휴대전화 캘린더의 일정을 지우지 못해 손주들 일정도 그대로 두었어요. 다시 시도하거나 '손주들에서만 삭제'를 선택해주세요."
+                }
+            }
+            Button("손주들에서만 삭제") {
+                scheduleStore.delete(id: event.id, ownerId: auth.currentUser?.id)
+            }
+            Button("취소", role: .cancel) {}
+        }
+        .alert("알림", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("확인") {}
+        } message: {
+            Text(deleteError ?? "")
         }
     }
 }
@@ -254,4 +287,5 @@ struct ScheduleEventCard: View {
     ScheduleCalendarView()
         .environmentObject(ScheduleStore())
         .environmentObject(AuthViewModel())
+        .environmentObject(DeviceCalendarStore())
 }

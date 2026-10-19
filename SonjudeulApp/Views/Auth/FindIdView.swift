@@ -72,7 +72,8 @@ struct FindIdView: View {
                             withAnimation(.easeOut(duration: 0.3)) {
                                 let user = UserStore.shared.findUserByNameAndPhone(name: name, phone: phone)
                                 if let user {
-                                    result = maskEmail(user.email)
+                                    // 이메일 없이 가입한 회원은 아이디를 가려서 보여준다
+                                    result = user.email.isEmpty ? maskUsername(user.username) : maskEmail(user.email)
                                 } else {
                                     result = nil
                                 }
@@ -96,6 +97,11 @@ struct FindIdView: View {
                 }
             }
         }
+    }
+
+    private func maskUsername(_ username: String) -> String {
+        let visible = username.prefix(2)
+        return visible + String(repeating: "*", count: max(username.count - 2, 3))
     }
 
     private func maskEmail(_ email: String) -> String {

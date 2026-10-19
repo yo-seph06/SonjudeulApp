@@ -56,6 +56,9 @@
 		B045 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A045 /* ShareSheet.swift */; };
 		B046 /* FindIdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A046 /* FindIdView.swift */; };
 		B047 /* FindPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A047 /* FindPasswordView.swift */; };
+		B052 /* AccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A052 /* AccountDeletion.swift */; };
+		B053 /* ContactValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A053 /* ContactValidation.swift */; };
+		B054 /* DeviceCalendarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A054 /* DeviceCalendarStore.swift */; };
 		B051 /* AdminMemberListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A051 /* AdminMemberListView.swift */; };
 		B050 /* WithdrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A050 /* WithdrawView.swift */; };
 		B049 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A049 /* SessionStore.swift */; };
@@ -117,6 +120,9 @@
 		A045 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		A046 /* FindIdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindIdView.swift; sourceTree = "<group>"; };
 		A047 /* FindPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPasswordView.swift; sourceTree = "<group>"; };
+		A052 /* AccountDeletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletion.swift; sourceTree = "<group>"; };
+		A053 /* ContactValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactValidation.swift; sourceTree = "<group>"; };
+		A054 /* DeviceCalendarStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCalendarStore.swift; sourceTree = "<group>"; };
 		A051 /* AdminMemberListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminMemberListView.swift; sourceTree = "<group>"; };
 		A050 /* WithdrawView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithdrawView.swift; sourceTree = "<group>"; };
 		A049 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -235,6 +241,9 @@
 				A005 /* Subscription.swift */,
 				A006 /* MockData.swift */,
 				A035 /* UserStore.swift */,
+				A052 /* AccountDeletion.swift */,
+				A053 /* ContactValidation.swift */,
+				A054 /* DeviceCalendarStore.swift */,
 				A049 /* SessionStore.swift */,
 				A048 /* PasswordHasher.swift */,
 				A040 /* BookingStore.swift */,
@@ -436,6 +445,9 @@
 				B042 /* ReportStore.swift in Sources */,
 				B043 /* MentorRatingView.swift in Sources */,
 				B044 /* ProfileEditView.swift in Sources */,
+				B052 /* AccountDeletion.swift in Sources */,
+				B053 /* ContactValidation.swift in Sources */,
+				B054 /* DeviceCalendarStore.swift in Sources */,
 				B051 /* AdminMemberListView.swift in Sources */,
 				B050 /* WithdrawView.swift in Sources */,
 				B049 /* SessionStore.swift in Sources */,
@@ -587,6 +599,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "손주들";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리고, 원하실 때 손주들 일정을 휴대전화 캘린더에 추가하기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -616,6 +630,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "손주들";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리고, 원하실 때 손주들 일정을 휴대전화 캘린더에 추가하기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -14,10 +14,17 @@ struct ProfileEditView: View {
     @State private var errorMessage = ""
 
     private let isMentor: Bool
+    private let originalPhone: String
+
+    /// 번호를 바꾸지 않았다면 (이전 버전 형식이라도) 그대로 저장할 수 있다
+    private var phoneAcceptable: Bool {
+        PhoneRule.isValid(phone) || PhoneRule.normalized(phone) == PhoneRule.normalized(originalPhone)
+    }
 
     init(user: User) {
         _name = State(initialValue: user.name)
         _phone = State(initialValue: user.phone)
+        originalPhone = user.phone
         _university = State(initialValue: user.university ?? "")
         isMentor = user.role == .mentor
         if let data = user.profileImageData, let img = UIImage(data: data) {
@@ -29,7 +36,7 @@ struct ProfileEditView: View {
 
     private var canSave: Bool {
         !name.isEmpty &&
-        phone.count >= 10 &&
+        phoneAcceptable &&
         (isMentor ? !university.isEmpty : true)
     }
 
@@ -95,8 +102,17 @@ struct ProfileEditView: View {
                                   text: $university)
                     }
 
-                    EditField(label: "전화번호", placeholder: "010-0000-0000",
+                    EditField(label: "휴대전화 번호", placeholder: "010-0000-0000",
                               text: $phone, keyboard: .phonePad)
+                        .onChange(of: phone) { _, new in
+                            let cleaned = PhoneRule.sanitizeInput(new)
+                            if cleaned != new { phone = cleaned }
+                        }
+                    if !phone.isEmpty && !phoneAcceptable {
+                        Text("휴대전화 번호를 확인해주세요 (예: 010-1234-5678)")
+                            .font(.sonjuCaption)
+                            .foregroundColor(.red)
+                    }
 
                     if !errorMessage.isEmpty {
                         Text(errorMessage)
@@ -158,7 +174,16 @@ struct ProfileEditView: View {
         if let img = profileImage {
             updated.profileImageData = img.jpegData(compressionQuality: 0.7)
         }
-        auth.updateCurrentUser(updated)
+        do {
+            try auth.updateCurrentUser(updated)
+        } catch let error as RegistrationError {
+            errorMessage = error.message
+            return
+        } catch {
+            errorMessage = "프로필을 저장하지 못했어요. 다시 시도해주세요."
+            return
+        }
+        errorMessage = ""
         withAnimation { showSuccess = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { dismiss() }
     }

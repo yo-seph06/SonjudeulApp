@@ -31,6 +31,13 @@ class ScheduleStore: ObservableObject {
         save()
     }
 
+    /// 본인 일정에만 기기 캘린더 일정 ID를 연결한다.
+    func setDeviceEventId(_ deviceEventId: String?, for id: UUID, ownerId: UUID?) {
+        guard let ownerId, let idx = events.firstIndex(where: { $0.id == id && $0.ownerId == ownerId }) else { return }
+        events[idx].deviceEventId = deviceEventId
+        save()
+    }
+
     // 조회는 항상 로그인한 회원의 ID로 거른다
     func events(forOwner ownerId: UUID?) -> [ScheduleEvent] {
         guard let ownerId else { return [] }

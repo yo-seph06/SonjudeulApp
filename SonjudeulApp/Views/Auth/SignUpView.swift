@@ -25,14 +25,17 @@ struct SignUpView: View {
     @State private var showTermsSheet = false
 
     var passwordsMatch: Bool { password == passwordConfirm }
+    /// 이메일은 선택 항목: 비워두거나, 입력했다면 올바른 형식이어야 한다
+    var emailValid: Bool { email.trimmingCharacters(in: .whitespaces).isEmpty || EmailRule.isValid(email) }
+    var phoneValid: Bool { PhoneRule.isValid(phone) }
 
     var canSubmit: Bool {
         !name.isEmpty &&
         username.count >= 4 &&
-        !email.isEmpty && email.contains("@") &&
+        emailValid &&
         password.count >= 6 &&
         passwordsMatch &&
-        phone.count >= 10 &&
+        phoneValid &&
         gender != nil &&
         agreePrivacy &&
         agreeTerms &&
@@ -150,8 +153,15 @@ struct SignUpView: View {
                     }
 
                     // 이메일
-                    InputField(label: "이메일", placeholder: "example@email.com",
-                               text: $email, keyboard: .emailAddress, autocap: false)
+                    InputField(label: "이메일 (선택)", placeholder: "example@email.com",
+                               text: $email, keyboard: .emailAddress, autocap: false,
+                               isValid: email.isEmpty ? nil : emailValid,
+                               errorText: "이메일 형식이 올바르지 않아요 (영문·숫자만 입력할 수 있어요)")
+                        // 한글·공백 등 이메일에 쓸 수 없는 문자는 입력되지 않게 바로 걸러낸다
+                        .onChange(of: email) { _, new in
+                            let cleaned = EmailRule.sanitizeInput(new)
+                            if cleaned != new { email = cleaned }
+                        }
 
                     // 비밀번호
                     InputField(label: "비밀번호 (6자리 이상)", placeholder: "••••••",
@@ -182,8 +192,14 @@ struct SignUpView: View {
                     }
 
                     // 전화번호
-                    InputField(label: "전화번호", placeholder: "010-0000-0000",
-                               text: $phone, keyboard: .phonePad)
+                    InputField(label: "휴대전화 번호", placeholder: "010-0000-0000",
+                               text: $phone, keyboard: .phonePad,
+                               isValid: phone.isEmpty ? nil : phoneValid,
+                               errorText: "휴대전화 번호를 확인해주세요 (예: 010-1234-5678)")
+                        .onChange(of: phone) { _, new in
+                            let cleaned = PhoneRule.sanitizeInput(new)
+                            if cleaned != new { phone = cleaned }
+                        }
 
                     // 생년월일
                     VStack(alignment: .leading, spacing: 8) {
@@ -342,7 +358,9 @@ struct SignUpView: View {
         .alert("가입 완료!", isPresented: $showSuccess) {
             Button("로그인하러 가기") { dismiss() }
         } message: {
-            Text("회원가입이 완료되었어요.\n아이디 또는 이메일로 로그인해주세요.")
+            Text(email.trimmingCharacters(in: .whitespaces).isEmpty
+                 ? "회원가입이 완료되었어요.\n아이디로 로그인해주세요."
+                 : "회원가입이 완료되었어요.\n아이디 또는 이메일로 로그인해주세요.")
         }
     }
 
@@ -354,8 +372,12 @@ struct SignUpView: View {
             errorMessage = RegistrationError.duplicateUsername.message
             return
         }
-        if UserStore.shared.emailExists(email) {
+        if !email.trimmingCharacters(in: .whitespaces).isEmpty && UserStore.shared.emailExists(email) {
             errorMessage = RegistrationError.duplicateEmail.message
+            return
+        }
+        if UserStore.shared.phoneExists(phone) {
+            errorMessage = RegistrationError.duplicatePhone.message
             return
         }
 
@@ -363,7 +385,7 @@ struct SignUpView: View {
         let user = User(
             name: name.trimmingCharacters(in: .whitespaces),
             username: username,
-            email: email,
+            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
             password: password,
             phone: phone,
             role: selectedRole,
@@ -410,6 +432,17 @@ private struct InputField: View {
     var keyboard: UIKeyboardType = .default
     var autocap: Bool = true
     var isSecure: Bool = false
+    /// nil이면 검증 표시 없음
+    var isValid: Bool? = nil
+    var errorText: String = ""
+
+    private var borderColor: Color {
+        switch isValid {
+        case .some(true):  return .sonjuSuccess
+        case .some(false): return .red
+        case .none:        return .sonjuDivider
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -431,8 +464,13 @@ private struct InputField: View {
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.sonjuDivider, lineWidth: 1)
+                    .stroke(borderColor, lineWidth: 1)
             )
+            if isValid == false && !errorText.isEmpty {
+                Text(errorText)
+                    .font(.sonjuCaption)
+                    .foregroundColor(.red)
+            }
         }
     }
 }

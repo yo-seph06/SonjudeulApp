@@ -2,14 +2,12 @@ import SwiftUI
 
 struct WithdrawView: View {
     @EnvironmentObject var auth: AuthViewModel
-    @EnvironmentObject var bookingStore: BookingStore
-    @EnvironmentObject var reportStore: ReportStore
-    @EnvironmentObject var scheduleStore: ScheduleStore
 
     @State private var password = ""
     @State private var agreed = false
     @State private var showConfirm = false
     @State private var errorMessage = ""
+    @State private var completed: (requestedAt: Date, scheduledAt: Date)? = nil
 
     private var canWithdraw: Bool { agreed && password.count >= 6 }
 
@@ -31,10 +29,14 @@ struct WithdrawView: View {
 
                     SonjuCard {
                         VStack(alignment: .leading, spacing: 12) {
-                            noticeRow("탈퇴한 계정으로는 다시 로그인할 수 없어요.")
-                            noticeRow("진행 중인 예약, 일정, 리포트가 삭제돼요.")
-                            noticeRow("연락처·이메일·프로필 사진 등 개인정보가 삭제돼요.")
-                            noticeRow("사용하던 아이디는 다시 가입에 사용할 수 없어요.")
+                            Text("회원 탈퇴를 신청하면 계정은 즉시 비활성화되며, \(DeletionPolicy.gracePeriodDays)일간 탈퇴 유예기간이 적용됩니다. \(DeletionPolicy.gracePeriodDays)일 이내 다시 로그인하면 계정을 복구할 수 있습니다. \(DeletionPolicy.gracePeriodDays)일이 지나면 계정과 관련 데이터가 영구적으로 삭제되어 복구할 수 없습니다.")
+                                .font(.sonjuBody)
+                                .foregroundColor(.sonjuText)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Divider().background(Color.sonjuDivider)
+                            noticeRow("유예기간 동안에는 로그인 후 계정 복구만 할 수 있어요.")
+                            noticeRow("영구 삭제 시 회원정보, 예약, 일정, 리포트가 삭제돼요.")
+                            noticeRow("완료된 방문 기록은 이름 등 개인정보 없이 통계용으로만 남아요.")
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -92,14 +94,19 @@ struct WithdrawView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
             }
+
+            if let completed {
+                completionOverlay(requestedAt: completed.requestedAt, scheduledAt: completed.scheduledAt)
+            }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(completed != nil)
         .alert("회원 탈퇴", isPresented: $showConfirm) {
             Button("취소", role: .cancel) {}
-            Button("탈퇴", role: .destructive) { withdraw() }
+            Button("탈퇴하기", role: .destructive) { requestDeletion() }
         } message: {
-            Text("정말 회원 탈퇴를 하시겠습니까?")
+            Text("탈퇴 신청 후 \(DeletionPolicy.gracePeriodDays)일 동안은 계정을 복구할 수 있습니다.\n\n\(DeletionPolicy.gracePeriodDays)일이 지나면 계정과 관련된 데이터가 영구 삭제되며 복구할 수 없습니다.\n\n정말 탈퇴하시겠습니까?")
         }
     }
 
@@ -116,19 +123,46 @@ struct WithdrawView: View {
         }
     }
 
-    private func withdraw() {
-        guard let role = auth.currentUser?.role else { return }
-        do {
-            // 본인 확인 후 탈퇴 처리 + 로그아웃
-            let id = try auth.withdraw(password: password)
-            // 탈퇴한 회원의 데이터가 다른 회원에게 보이지 않도록 정리
-            if role == .mentor {
-                bookingStore.releaseBookings(forWithdrawnMentor: id)
-            } else {
-                bookingStore.removeData(forWithdrawnChild: id)
-                reportStore.removeReports(forChild: id)
+    private func completionOverlay(requestedAt: Date, scheduledAt: Date) -> some View {
+        ZStack {
+            Color.black.opacity(0.4).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Image(systemName: "clock.badge.exclamationmark.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(.sonjuPrimary)
+                Text("탈퇴 신청이 완료되었어요")
+                    .font(.sonjuHeadline)
+                    .foregroundColor(.sonjuText)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("탈퇴 신청일: \(DeletionPolicy.dateTimeText(requestedAt))")
+                    Text("영구 삭제 예정일: \(DeletionPolicy.dateTimeText(scheduledAt))")
+                }
+                .font(.sonjuCaption)
+                .foregroundColor(.sonjuText)
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.sonjuBackground)
+                .cornerRadius(12)
+                Text("영구 삭제 예정일 전에 다시 로그인하면 계정을 복구할 수 있어요.")
+                    .font(.sonjuCaption)
+                    .foregroundColor(.sonjuSecondary)
+                    .multilineTextAlignment(.center)
+                AmberButton(title: "확인") { auth.logout() }
             }
-            scheduleStore.removeEvents(forOwner: id)
+            .padding(28)
+            .background(Color.sonjuCard)
+            .cornerRadius(24)
+            .shadow(color: .black.opacity(0.15), radius: 20)
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private func requestDeletion() {
+        do {
+            let pending = try auth.requestDeletion(password: password)
+            guard let requestedAt = pending.deletionRequestedAt,
+                  let scheduledAt = pending.scheduledDeletionAt else { auth.logout(); return }
+            withAnimation { completed = (requestedAt, scheduledAt) }
         } catch AccountError.wrongPassword {
             errorMessage = "비밀번호가 올바르지 않아요"
         } catch AccountError.adminProtected {
@@ -143,8 +177,5 @@ struct WithdrawView: View {
     NavigationStack {
         WithdrawView()
             .environmentObject(AuthViewModel())
-            .environmentObject(BookingStore())
-            .environmentObject(ReportStore())
-            .environmentObject(ScheduleStore())
     }
 }

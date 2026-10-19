@@ -9,34 +9,60 @@ class AuthViewModel: ObservableObject {
 
     private let store: UserStore
     private let session: SessionStoring
+    /// 현재 시각 (테스트에서 시간 경과를 흉내 내기 위해 주입 가능)
+    private let now: () -> Date
 
     /// 관리자 여부는 화면 상태가 아니라 저장소의 회원 권한으로 판단한다.
     var isAdmin: Bool { store.isAdmin(currentUser?.id) }
 
-    init(store: UserStore = .shared, session: SessionStoring = KeychainSessionStore()) {
+    init(store: UserStore = .shared, session: SessionStoring = KeychainSessionStore(),
+         now: @escaping () -> Date = Date.init) {
         self.store = store
         self.session = session
+        self.now = now
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         migrateLegacySession()
         restoreSession()
     }
 
-    enum LoginResult {
+    enum LoginResult: Equatable {
         case success
         case wrongCredentials
         case wrongRole
+        /// 탈퇴 유예 중인 계정: 로그인하지 않고 복구 여부를 묻는다
+        case pendingDeletion(requestedAt: Date, scheduledDeletionAt: Date)
     }
 
     @discardableResult
     func login(identifier: String, password: String, role: UserRole) -> LoginResult {
-        guard let user = store.authenticate(identifier: identifier, password: password) else {
+        guard let user = store.verifyCredentials(identifier: identifier, password: password, now: now()) else {
             return .wrongCredentials
         }
         // 관리자는 어느 로그인 화면에서든 로그인 가능
         guard user.isAdmin || user.role == role else {
             return .wrongRole
         }
+        if user.isPendingDeletion {
+            let requested = user.deletionRequestedAt ?? now()
+            return .pendingDeletion(requestedAt: requested,
+                                    scheduledDeletionAt: user.scheduledDeletionAt
+                                        ?? DeletionPolicy.scheduledDeletionDate(from: requested))
+        }
         startSession(for: user)
+        return .success
+    }
+
+    /// 탈퇴 유예 중인 계정을 복구하고 로그인한다. 아이디·비밀번호를 다시 확인한다.
+    @discardableResult
+    func restoreAccount(identifier: String, password: String, role: UserRole) -> LoginResult {
+        guard let user = store.verifyCredentials(identifier: identifier, password: password, now: now()) else {
+            return .wrongCredentials
+        }
+        guard user.isAdmin || user.role == role else { return .wrongRole }
+        guard let restored = try? store.restoreAccount(identifier: identifier, password: password, now: now()) else {
+            return .wrongCredentials
+        }
+        startSession(for: restored)
         return .success
     }
 
@@ -47,11 +73,10 @@ class AuthViewModel: ObservableObject {
         selectedRole = .child
     }
 
-    /// 로그인한 본인의 프로필만 수정할 수 있다.
-    func updateCurrentUser(_ updated: User) {
-        guard let current = currentUser, current.id == updated.id,
-              let saved = store.updateProfile(updated) else { return }
-        currentUser = saved
+    /// 로그인한 본인의 프로필만 수정할 수 있다. 전화번호 형식·중복 오류는 그대로 전달한다.
+    func updateCurrentUser(_ updated: User) throws {
+        guard let current = currentUser, current.id == updated.id else { throw AccountError.notAuthorized }
+        currentUser = try store.updateProfile(updated)
     }
 
     func changePassword(current: String, new newPassword: String) throws {
@@ -59,13 +84,15 @@ class AuthViewModel: ObservableObject {
         try store.changePassword(userId: id, current: current, new: newPassword)
     }
 
-    /// 본인 계정 탈퇴. 성공하면 탈퇴한 회원 ID를 돌려주고 로그아웃한다.
+    /// 본인 계정 탈퇴 신청 (3일 유예). 계정은 즉시 비활성화되고 저장된 로그인 상태도 지운다.
+    /// 화면에서 신청 결과(신청일·삭제 예정일)를 보여준 뒤 logout()을 호출한다.
     @discardableResult
-    func withdraw(password: String) throws -> UUID {
+    func requestDeletion(password: String) throws -> User {
         guard let id = currentUser?.id else { throw AccountError.notFound }
-        try store.withdraw(userId: id, requestedBy: id, password: password)
-        logout()
-        return id
+        let pending = try store.requestDeletion(userId: id, requestedBy: id, password: password, now: now())
+        session.clear()
+        currentUser = pending
+        return pending
     }
 
     func completeOnboarding() {

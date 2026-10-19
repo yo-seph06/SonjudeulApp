@@ -4,9 +4,11 @@ struct CalendarView: View {
     @EnvironmentObject var bookingStore: BookingStore
     @EnvironmentObject var auth: AuthViewModel
     @EnvironmentObject var scheduleStore: ScheduleStore
+    @EnvironmentObject var deviceCalendar: DeviceCalendarStore
     @State private var currentMonth = Date()
     @State private var selectedDate: Date? = nil
     @State private var showAddSheet = false
+    @State private var showDeviceCalendarSheet = false
 
     private let cal = Calendar.current
     private let weekDays = ["일", "월", "화", "수", "목", "금", "토"]
@@ -43,8 +45,18 @@ struct CalendarView: View {
         myBookings.filter { cal.isDate($0.rawDate, inSameDayAs: date) }
     }
 
+    /// 기기 캘린더 일정 중 손주들에서 내보낸 내 일정은 손주들 일정으로만 한 번 표시한다
+    private var ownScheduleIds: Set<UUID> {
+        Set(scheduleStore.events(forOwner: auth.currentUser?.id).map(\.id))
+    }
+
+    private func deviceEventsOn(_ date: Date) -> [DeviceCalendarEvent] {
+        deviceCalendar.events(on: date, ownerId: auth.currentUser?.id, excluding: ownScheduleIds)
+    }
+
     private func dotCount(for date: Date) -> Int {
         let total = bookingsOn(date).count + scheduleStore.eventsOn(date, ownerId: auth.currentUser?.id).count
+            + deviceEventsOn(date).count
         return min(total, 3)
     }
 
@@ -131,10 +143,14 @@ struct CalendarView: View {
                         }
                         .padding(.horizontal, 24)
 
+                        DeviceCalendarStatusRow { showDeviceCalendarSheet = true }
+                            .padding(.horizontal, 24)
+
                         // 선택된 날짜 항목
                         if let selected = selectedDate {
                             let dayBookings = bookingsOn(selected)
                             let dayEvents = scheduleStore.eventsOn(selected, ownerId: auth.currentUser?.id)
+                            let dayDeviceEvents = deviceEventsOn(selected)
 
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
@@ -152,7 +168,7 @@ struct CalendarView: View {
                                 }
                                 .padding(.horizontal, 24)
 
-                                if dayBookings.isEmpty && dayEvents.isEmpty {
+                                if dayBookings.isEmpty && dayEvents.isEmpty && dayDeviceEvents.isEmpty {
                                     SonjuCard {
                                         HStack(spacing: 12) {
                                             Image(systemName: "calendar.badge.exclamationmark")
@@ -171,6 +187,10 @@ struct CalendarView: View {
                                     }
                                     ForEach(dayEvents) { event in
                                         ScheduleEventCard(event: event)
+                                            .padding(.horizontal, 24)
+                                    }
+                                    ForEach(dayDeviceEvents) { event in
+                                        DeviceEventCard(event: event, day: selected)
                                             .padding(.horizontal, 24)
                                     }
                                 }
@@ -230,7 +250,15 @@ struct CalendarView: View {
                 ScheduleAddView(initialDate: selectedDate ?? Date())
                     .environmentObject(scheduleStore)
                     .environmentObject(auth)
+                    .environmentObject(deviceCalendar)
             }
+            .sheet(isPresented: $showDeviceCalendarSheet) {
+                DeviceCalendarSettingsView()
+                    .environmentObject(deviceCalendar)
+            }
+            .onAppear { deviceCalendar.load(around: currentMonth) }
+            .onChange(of: currentMonth) { _, month in deviceCalendar.load(around: month) }
+            .refreshable { deviceCalendar.refreshFromSystem() }
         }
     }
 
@@ -346,9 +374,204 @@ struct CalBookingCard: View {
     }
 }
 
+// MARK: - 기기 캘린더 연동 상태
+
+struct DeviceCalendarStatusRow: View {
+    @EnvironmentObject var deviceCalendar: DeviceCalendarStore
+    let action: () -> Void
+
+    private var text: String {
+        if let error = deviceCalendar.lastError, deviceCalendar.isEnabled { return error }
+        return deviceCalendar.isEnabled ? "휴대전화 캘린더 일정도 함께 보고 있어요" : "휴대전화 캘린더 일정도 함께 보기"
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: deviceCalendar.isEnabled ? "iphone.gen3.badge.checkmark" : "iphone.gen3")
+                    .foregroundColor(deviceCalendar.lastError != nil && deviceCalendar.isEnabled ? .orange : .sonjuPrimary)
+                Text(text)
+                    .font(.sonjuCaption)
+                    .foregroundColor(.sonjuSecondary)
+                    .multilineTextAlignment(.leading)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.sonjuSecondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.sonjuCard)
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - 기기 캘린더 일정 카드 (읽기 전용)
+
+struct DeviceEventCard: View {
+    let event: DeviceCalendarEvent
+    let day: Date
+
+    private var timeText: String {
+        let cal = Calendar.current
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        if event.isAllDay { return "종일" }
+        f.dateFormat = "a h:mm"
+        let sameDay = cal.isDate(event.start, inSameDayAs: event.end)
+        if sameDay { return "\(f.string(from: event.start)) ~ \(f.string(from: event.end))" }
+        // 여러 날에 걸친 일정은 날짜까지 표시
+        f.dateFormat = "M/d a h:mm"
+        return "\(f.string(from: event.start)) ~ \(f.string(from: event.end))"
+    }
+
+    var body: some View {
+        SonjuCard {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.sonjuSecondary.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "iphone.gen3")
+                        .foregroundColor(.sonjuSecondary)
+                        .font(.system(size: 18))
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.title)
+                        .font(.sonjuBody)
+                        .foregroundColor(.sonjuText)
+                    Text(timeText)
+                        .font(.sonjuCaption)
+                        .foregroundColor(.sonjuSecondary)
+                    if let location = event.location {
+                        Label(location, systemImage: "mappin.and.ellipse")
+                            .font(.sonjuCaption)
+                            .foregroundColor(.sonjuSecondary)
+                            .lineLimit(1)
+                    }
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(event.calendarTitle)
+                        .font(.system(size: 11))
+                        .foregroundColor(.sonjuSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.sonjuSecondary.opacity(0.1))
+                        .cornerRadius(20)
+                        .lineLimit(1)
+                    if event.isRecurring {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 11))
+                            .foregroundColor(.sonjuSecondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 기기 캘린더 연동 설정
+
+struct DeviceCalendarSettingsView: View {
+    @EnvironmentObject var deviceCalendar: DeviceCalendarStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var requesting = false
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.sonjuBackground.ignoresSafeArea()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        SonjuCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Label("휴대전화 캘린더 연동", systemImage: "calendar")
+                                    .font(.sonjuHeadline)
+                                    .foregroundColor(.sonjuText)
+                                bullet("휴대전화 캘린더 앱의 일정을 손주들 캘린더에 함께 보여드려요.")
+                                bullet("손주들에서 일정을 만들 때 휴대전화 캘린더에도 추가할 수 있어요.")
+                                bullet("불러온 일정은 이 기기 화면에만 표시되고, 손주들에 저장되거나 다른 회원(자녀·멘토)에게 공유되지 않아요.")
+                                bullet("연동은 지금 로그인한 계정에서만 켜져요. 다른 계정으로 로그인하면 보이지 않아요.")
+                            }
+                        }
+
+                        statusSection
+
+                        if let error = deviceCalendar.lastError {
+                            Text(error)
+                                .font(.sonjuCaption)
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .padding(24)
+                }
+            }
+            .navigationTitle("캘린더 연동")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("닫기") { dismiss() }
+                        .foregroundColor(.sonjuPrimary)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var statusSection: some View {
+        if deviceCalendar.isEnabled && deviceCalendar.access == .granted {
+            VStack(spacing: 12) {
+                Text("연동 중이에요")
+                    .font(.sonjuBody)
+                    .foregroundColor(.sonjuSuccess)
+                    .frame(maxWidth: .infinity)
+                AmberButton(title: "지금 새로고침") { deviceCalendar.refreshFromSystem() }
+                Button("연동 끄기") { deviceCalendar.disable() }
+                    .font(.sonjuCaption)
+                    .foregroundColor(.sonjuSecondary)
+                    .frame(maxWidth: .infinity)
+            }
+        } else {
+            switch deviceCalendar.access {
+            case .denied, .writeOnly:
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(deviceCalendar.access == .writeOnly
+                         ? "현재 '일정 추가만' 허용되어 있어 일정을 불러올 수 없어요. 설정에서 '전체 접근'으로 바꿔주세요."
+                         : "캘린더 접근이 허용되지 않았어요. 연동하지 않아도 손주들 캘린더는 그대로 사용할 수 있어요.")
+                        .font(.sonjuCaption)
+                        .foregroundColor(.sonjuSecondary)
+                    AmberButton(title: "설정에서 허용하기") { deviceCalendar.openSystemSettings() }
+                }
+            default:
+                AmberButton(title: requesting ? "요청 중…" : "연동하기", disabled: requesting) {
+                    requesting = true
+                    Task {
+                        await deviceCalendar.enable()
+                        requesting = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func bullet(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("•").foregroundColor(.sonjuPrimary)
+            Text(text)
+                .font(.sonjuCaption)
+                .foregroundColor(.sonjuSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
 #Preview {
     CalendarView()
         .environmentObject(BookingStore())
         .environmentObject(AuthViewModel())
         .environmentObject(ScheduleStore())
+        .environmentObject(DeviceCalendarStore())
 }

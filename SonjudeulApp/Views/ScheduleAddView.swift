@@ -3,6 +3,7 @@ import SwiftUI
 struct ScheduleAddView: View {
     @EnvironmentObject var scheduleStore: ScheduleStore
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var deviceCalendar: DeviceCalendarStore
     @Environment(\.dismiss) private var dismiss
 
     var initialDate: Date = Date()
@@ -10,6 +11,8 @@ struct ScheduleAddView: View {
     @State private var title = ""
     @State private var date: Date
     @State private var notes = ""
+    @State private var addToDeviceCalendar = false
+    @State private var exportError: String?
 
     init(initialDate: Date = Date()) {
         self.initialDate = initialDate
@@ -69,6 +72,19 @@ struct ScheduleAddView: View {
                         }
                         .padding(.horizontal, 24)
 
+                        // 기기 캘린더에도 추가 (연동을 켠 경우에만)
+                        if deviceCalendar.canWrite {
+                            SonjuCard {
+                                Toggle(isOn: $addToDeviceCalendar) {
+                                    Label("휴대전화 캘린더에도 추가", systemImage: "iphone.gen3")
+                                        .font(.sonjuBody)
+                                        .foregroundColor(.sonjuText)
+                                }
+                                .tint(.sonjuPrimary)
+                            }
+                            .padding(.horizontal, 24)
+                        }
+
                         // 알림 안내
                         HStack(spacing: 8) {
                             Image(systemName: "bell.badge.fill")
@@ -88,7 +104,17 @@ struct ScheduleAddView: View {
                             let trimmed = title.trimmingCharacters(in: .whitespaces)
                             guard !trimmed.isEmpty, let ownerId = auth.currentUser?.id else { return }
                             let event = ScheduleEvent(title: trimmed, date: date, notes: notes, ownerId: ownerId)
+                            // 손주들 일정을 먼저 저장하고, 기기 캘린더 추가가 실패해도 손주들 일정은 유지한다
                             scheduleStore.add(event)
+                            if addToDeviceCalendar && deviceCalendar.canWrite {
+                                do {
+                                    let deviceId = try deviceCalendar.export(event)
+                                    scheduleStore.setDeviceEventId(deviceId, for: event.id, ownerId: ownerId)
+                                } catch {
+                                    exportError = error.localizedDescription
+                                    return
+                                }
+                            }
                             dismiss()
                         }
                         .padding(.horizontal, 24)
@@ -96,6 +122,13 @@ struct ScheduleAddView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 32)
                 }
+            }
+            .alert("휴대전화 캘린더에 추가하지 못했어요", isPresented: Binding(
+                get: { exportError != nil }, set: { if !$0 { exportError = nil } }
+            )) {
+                Button("확인") { dismiss() }
+            } message: {
+                Text(exportError ?? "")
             }
             .navigationTitle("새 일정 추가")
             .navigationBarTitleDisplayMode(.inline)

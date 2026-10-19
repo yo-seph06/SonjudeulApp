@@ -116,10 +116,11 @@ class BookingStore: ObservableObject {
         bookings(forChild: id).first(where: { $0.status == "예약 확정" })
     }
 
-    // MARK: - 회원 탈퇴 / 로그인 전환
+    // MARK: - 영구 삭제 (탈퇴 유예기간 종료 후) / 로그인 전환
 
-    /// 탈퇴한 자녀의 진행 중인 예약은 삭제하고, 완료된 방문 기록은 자녀 정보와의 연결을 끊는다.
-    func removeData(forWithdrawnChild id: UUID) {
+    /// 영구 삭제된 자녀의 진행 중인 예약은 삭제하고, 완료된 방문 기록은 자녀 정보와의 연결을 끊는다.
+    /// (완료 기록은 개인정보 없이 날짜·플랜·평점만 남아 멘토 방문 횟수·평점 통계에 쓰인다)
+    func purgeData(forDeletedChild id: UUID) {
         let pending = bookings.filter { $0.childId == id && $0.status != "방문 완료" }
         UNUserNotificationCenter.current().removePendingNotificationRequests(
             withIdentifiers: pending.map { "visit-1h-\($0.id.uuidString)" }
@@ -131,13 +132,17 @@ class BookingStore: ObservableObject {
         save()
     }
 
-    /// 탈퇴한 멘토가 맡은 미완료 예약은 다시 멘토를 찾도록 되돌린다.
-    func releaseBookings(forWithdrawnMentor id: UUID) {
-        for idx in bookings.indices
-        where bookings[idx].mentorId == id && bookings[idx].status != "방문 완료" {
-            bookings[idx].status = "멘토 찾는 중"
+    /// 영구 삭제된 멘토가 맡은 미완료 예약은 다시 멘토를 찾도록 되돌리고,
+    /// 완료된 방문 기록에서는 멘토 이름과 연결을 지운다.
+    func purgeData(forDeletedMentor id: UUID) {
+        for idx in bookings.indices where bookings[idx].mentorId == id {
+            if bookings[idx].status == "방문 완료" {
+                bookings[idx].mentorName = "탈퇴한 멘토"
+            } else {
+                bookings[idx].status = "멘토 찾는 중"
+                bookings[idx].mentorName = ""
+            }
             bookings[idx].mentorId = nil
-            bookings[idx].mentorName = ""
         }
         save()
     }

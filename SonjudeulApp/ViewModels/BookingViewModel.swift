@@ -33,9 +33,10 @@ class BookingViewModel: ObservableObject {
         return !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    func setParentLocation(_ location: ParentLocation) {
+    func setParentLocation(_ location: ParentLocation, detail: String) {
         parentLocation = location
         address = location.address
+        addressDetail = detail
     }
 
     func nextStep() {

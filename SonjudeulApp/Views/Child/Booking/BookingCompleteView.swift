@@ -82,7 +82,8 @@ struct BookingCompleteView: View {
                         Divider().background(Color.sonjuDivider)
                         SummaryRow(label: "부모님 성함", value: bookingVM.parentName.isEmpty ? "미입력" : bookingVM.parentName)
                         Divider().background(Color.sonjuDivider)
-                        SummaryRow(label: "방문 주소", value: bookingVM.address)
+                        SummaryRow(label: "방문 주소", value: bookingVM.addressDetail.isEmpty
+                                   ? bookingVM.address : "\(bookingVM.address) \(bookingVM.addressDetail)")
                         Divider().background(Color.sonjuDivider)
                         SummaryRow(label: "담당 멘토", value: "매칭 중...")
                     }

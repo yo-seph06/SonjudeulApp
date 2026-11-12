@@ -32,6 +32,9 @@ struct ParentLocation: Codable, Equatable {
     var address: String
     var latitude: Double
     var longitude: Double
+    // 화면 표시용 도로명·지번 주소 (이전 저장 데이터에는 없을 수 있다)
+    var roadAddress: String? = nil
+    var jibunAddress: String? = nil
 
     var isValid: Bool {
         !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

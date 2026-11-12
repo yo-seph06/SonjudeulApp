@@ -80,11 +80,18 @@ struct ParentInfoView: View {
                                 Image(systemName: "mappin.circle.fill")
                                     .foregroundColor(.sonjuPrimary)
                                     .font(.system(size: 22))
-                                Text(bookingVM.address.isEmpty ? "지도에서 위치를 선택해 주세요" : bookingVM.address)
-                                    .font(.sonjuBody)
-                                    .foregroundColor(bookingVM.address.isEmpty ? .sonjuSecondary : .sonjuText)
-                                    .multilineTextAlignment(.leading)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(bookingVM.address.isEmpty ? "지도에서 위치를 선택해 주세요" : bookingVM.address)
+                                        .font(.sonjuBody)
+                                        .foregroundColor(bookingVM.address.isEmpty ? .sonjuSecondary : .sonjuText)
+                                        .multilineTextAlignment(.leading)
+                                    if !bookingVM.addressDetail.isEmpty {
+                                        Text(bookingVM.addressDetail)
+                                            .font(.sonjuCaption)
+                                            .foregroundColor(.sonjuSecondary)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .padding(16)
                             .frame(minHeight: 56)
@@ -112,13 +119,6 @@ struct ParentInfoView: View {
                             .cornerRadius(14)
                         }
                         .buttonStyle(PressButtonStyle())
-                    }
-
-                    if bookingVM.parentLocation != nil {
-                        BookingTextField(
-                            placeholder: "상세 주소 (동·호수, 선택)",
-                            text: $bookingVM.addressDetail
-                        )
                     }
 
                     if locationErrorVisible {
@@ -164,9 +164,10 @@ struct ParentInfoView: View {
             .padding(.horizontal, 24)
             .padding(.top, 8)
         }
-        .sheet(isPresented: $showLocationPicker) {
-            ParentLocationPickerView(initialLocation: bookingVM.parentLocation) { location in
-                bookingVM.setParentLocation(location)
+        .fullScreenCover(isPresented: $showLocationPicker) {
+            ParentLocationPickerView(initialLocation: bookingVM.parentLocation,
+                                     initialDetail: bookingVM.addressDetail) { location, detail in
+                bookingVM.setParentLocation(location, detail: detail)
             }
         }
         .alert("부모님 위치", isPresented: Binding(

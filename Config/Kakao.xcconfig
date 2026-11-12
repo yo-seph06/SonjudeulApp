@@ -1,0 +1,6 @@
+// 카카오 로컬 API(주소·장소 검색, 좌표→주소 변환) 설정.
+// 실제 키는 Config/Secrets.xcconfig 에 넣는다 (git에 올라가지 않음, Secrets.example.xcconfig 참고).
+// 키가 없으면 앱은 애플 지도 검색으로 동작한다.
+KAKAO_REST_API_KEY =
+
+#include? "Secrets.xcconfig"

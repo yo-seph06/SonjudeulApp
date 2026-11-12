@@ -14,12 +14,41 @@ struct BookingRecord: Identifiable, Codable {
     var rating: Int? = nil
     var reviewComment: String = ""
     var reportWritten: Bool = false
+    // 위치 등록 기능 이전 예약은 값이 없으므로 옵셔널로 둔다 (기존 저장 파일과 호환)
+    var parentLocation: ParentLocation? = nil
+    var parentAddressDetail: String? = nil
 
     var statusColor: Color {
         switch status {
         case "예약 확정":   return .sonjuSuccess
         case "멘토 찾는 중": return Color(hex: "#FF9800")
         default:           return Color(hex: "#6B6B6B")
+        }
+    }
+}
+
+/// 지도에서 선택한 부모님 위치. 주소와 위도·경도가 모두 있어야 유효하다.
+struct ParentLocation: Codable, Equatable {
+    var address: String
+    var latitude: Double
+    var longitude: Double
+
+    var isValid: Bool {
+        !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && latitude.isFinite && longitude.isFinite
+            && (-90...90).contains(latitude) && (-180...180).contains(longitude)
+            && !(latitude == 0 && longitude == 0)
+    }
+}
+
+enum BookingRequestError: Error, Equatable {
+    case missingParentLocation
+    case saveFailed
+
+    var message: String {
+        switch self {
+        case .missingParentLocation: return "부모님의 위치 정보를 입력해 주세요."
+        case .saveFailed:            return "예약을 저장하지 못했어요. 다시 시도해주세요."
         }
     }
 }
@@ -56,6 +85,20 @@ class BookingStore: ObservableObject {
     func add(_ record: BookingRecord) {
         bookings.insert(record, at: 0)
         save()
+    }
+
+    /// 자녀의 예약 신청 저장. 부모님 위치(주소 + 위도·경도)가 없으면 저장하지 않는다.
+    func addChildRequest(_ record: BookingRecord) throws {
+        guard let location = record.parentLocation, location.isValid else {
+            throw BookingRequestError.missingParentLocation
+        }
+        bookings.insert(record, at: 0)
+        do {
+            try persist()
+        } catch {
+            bookings.removeFirst()
+            throw BookingRequestError.saveFailed
+        }
     }
 
     func markVisited(id: UUID) {
@@ -216,7 +259,9 @@ class BookingStore: ObservableObject {
                                     plan: previous.plan, status: previous.status,
                                     mentorId: previous.mentorId, mentorName: previous.mentorName,
                                     childId: previous.childId, rating: previous.rating,
-                                    reviewComment: previous.reviewComment, reportWritten: previous.reportWritten)
+                                    reviewComment: previous.reviewComment, reportWritten: previous.reportWritten,
+                                    parentLocation: previous.parentLocation,
+                                    parentAddressDetail: previous.parentAddressDetail)
         bookings[idx] = updated
         do {
             try persist()

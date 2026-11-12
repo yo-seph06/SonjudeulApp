@@ -34,6 +34,7 @@
 		B022 /* BookingFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A022 /* BookingFlowView.swift */; };
 		B023 /* PlanSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A023 /* PlanSelectView.swift */; };
 		B024 /* ParentInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A024 /* ParentInfoView.swift */; };
+		B070 /* ParentLocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A070 /* ParentLocationPickerView.swift */; };
 		B026 /* MentorMatchingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A026 /* MentorMatchingView.swift */; };
 		B027 /* BookingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A027 /* BookingCompleteView.swift */; };
 		B028 /* ReportListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A028 /* ReportListView.swift */; };
@@ -105,6 +106,7 @@
 		A022 /* BookingFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingFlowView.swift; sourceTree = "<group>"; };
 		A023 /* PlanSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanSelectView.swift; sourceTree = "<group>"; };
 		A024 /* ParentInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentInfoView.swift; sourceTree = "<group>"; };
+		A070 /* ParentLocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentLocationPickerView.swift; sourceTree = "<group>"; };
 		A026 /* MentorMatchingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorMatchingView.swift; sourceTree = "<group>"; };
 		A027 /* BookingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingCompleteView.swift; sourceTree = "<group>"; };
 		A028 /* ReportListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportListView.swift; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 				A022 /* BookingFlowView.swift */,
 				A023 /* PlanSelectView.swift */,
 				A024 /* ParentInfoView.swift */,
+				A070 /* ParentLocationPickerView.swift */,
 				A026 /* MentorMatchingView.swift */,
 				A027 /* BookingCompleteView.swift */,
 			);
@@ -452,6 +455,7 @@
 				B022 /* BookingFlowView.swift in Sources */,
 				B023 /* PlanSelectView.swift in Sources */,
 				B024 /* ParentInfoView.swift in Sources */,
+				B070 /* ParentLocationPickerView.swift in Sources */,
 				B026 /* MentorMatchingView.swift in Sources */,
 				B027 /* BookingCompleteView.swift in Sources */,
 				B028 /* ReportListView.swift in Sources */,
@@ -628,6 +632,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "손주들";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리고, 원하실 때 손주들 일정을 휴대전화 캘린더에 추가하기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "부모님 댁 위치를 지도에서 선택할 때 현재 위치로 지도를 옮기기 위해 사용해요. 권한을 허용하지 않아도 주소 검색이나 지도에서 직접 위치를 선택할 수 있어요.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -659,6 +664,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "손주들";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리고, 원하실 때 손주들 일정을 휴대전화 캘린더에 추가하기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "부모님 댁 위치를 지도에서 선택할 때 현재 위치로 지도를 옮기기 위해 사용해요. 권한을 허용하지 않아도 주소 검색이나 지도에서 직접 위치를 선택할 수 있어요.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "휴대전화 캘린더의 일정을 손주들 캘린더에 함께 보여드리기 위해 사용해요. 캘린더 일정은 이 기기에서만 보이며 다른 회원에게 공유되지 않아요.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

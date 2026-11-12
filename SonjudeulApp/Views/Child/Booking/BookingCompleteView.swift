@@ -2,12 +2,9 @@ import SwiftUI
 
 struct BookingCompleteView: View {
     @ObservedObject var bookingVM: BookingViewModel
-    @EnvironmentObject var bookingStore: BookingStore
-    @EnvironmentObject var auth: AuthViewModel
     @Environment(\.dismiss) var dismiss
 
     @State private var showIcon = false
-    @State private var didRecord = false
     @State private var showShare = false
 
     private var formattedDate: String {
@@ -17,9 +14,7 @@ struct BookingCompleteView: View {
         return f.string(from: bookingVM.visitDate)
     }
 
-    private var planName: String {
-        bookingVM.selectedPlan == .subscription ? "안심 정기구독" : "원데이 효도"
-    }
+    private var planName: String { bookingVM.planName }
 
     var body: some View {
         ScrollView {
@@ -87,6 +82,8 @@ struct BookingCompleteView: View {
                         Divider().background(Color.sonjuDivider)
                         SummaryRow(label: "부모님 성함", value: bookingVM.parentName.isEmpty ? "미입력" : bookingVM.parentName)
                         Divider().background(Color.sonjuDivider)
+                        SummaryRow(label: "방문 주소", value: bookingVM.address)
+                        Divider().background(Color.sonjuDivider)
                         SummaryRow(label: "담당 멘토", value: "매칭 중...")
                     }
                 }
@@ -123,16 +120,7 @@ struct BookingCompleteView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 showIcon = true
             }
-            if !didRecord, let childId = auth.currentUser?.id {
-                didRecord = true
-                bookingStore.add(BookingRecord(
-                    date: formattedDate,
-                    rawDate: bookingVM.visitDate,
-                    plan: planName,
-                    status: "멘토 찾는 중",
-                    childId: childId
-                ))
-            }
+            // 예약 저장은 위치 검증과 함께 ParentInfoView의 결제하기 단계에서 처리한다
         }
     }
 }
@@ -141,8 +129,6 @@ struct BookingCompleteView: View {
     let vm = BookingViewModel()
     vm.parentName = "홍길순"
     return BookingCompleteView(bookingVM: vm)
-        .environmentObject(BookingStore())
-        .environmentObject(AuthViewModel())
 }
 
 struct SummaryRow: View {

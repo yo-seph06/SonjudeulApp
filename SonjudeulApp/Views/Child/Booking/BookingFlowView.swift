@@ -8,7 +8,8 @@ struct BookingFlowView: View {
         switch bookingVM.currentStep {
         case .plan:        return 0
         case .bookingInfo: return 1
-        case .complete:    return 2
+        case .subjects:    return 2
+        case .complete:    return 3
         }
     }
 
@@ -18,7 +19,7 @@ struct BookingFlowView: View {
 
             VStack(spacing: 0) {
                 if bookingVM.currentStep != .complete {
-                    StepProgressBar(current: stepIndex + 1, total: 2)
+                    StepProgressBar(current: stepIndex + 1, total: 3)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 16)
                 }
@@ -29,6 +30,8 @@ struct BookingFlowView: View {
                         PlanSelectView(bookingVM: bookingVM)
                     case .bookingInfo:
                         ParentInfoView(bookingVM: bookingVM)
+                    case .subjects:
+                        SubjectSelectView(bookingVM: bookingVM)
                     case .complete:
                         BookingCompleteView(bookingVM: bookingVM)
                     }
@@ -44,8 +47,21 @@ struct BookingFlowView: View {
         .environmentObject(bookingVM)
         .navigationTitle(stepTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(bookingVM.currentStep == .subjects)
         .toolbar {
-            if bookingVM.currentStep == .bookingInfo {
+            // 과목 선택에서 이전 단계로 돌아가도 입력한 부모님 정보와 선택 과목은 유지된다
+            if bookingVM.currentStep == .subjects {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        withAnimation { bookingVM.currentStep = .bookingInfo }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.sonjuSecondary)
+                    }
+                    .accessibilityLabel("이전 단계")
+                }
+            }
+            if bookingVM.currentStep == .bookingInfo || bookingVM.currentStep == .subjects {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
@@ -60,6 +76,7 @@ struct BookingFlowView: View {
         switch bookingVM.currentStep {
         case .plan:        return "서비스 선택"
         case .bookingInfo: return "예약하기"
+        case .subjects:    return "과목 선택"
         case .complete:    return ""
         }
     }

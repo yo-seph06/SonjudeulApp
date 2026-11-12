@@ -8,12 +8,8 @@ class ReportViewModel: ObservableObject {
     @Published var nextRecommendations: Set<String> = []
     @Published var reportSent: Bool = false
 
-    let curriculumItems = [
-        "핸드폰 최적화", "보안 설정 점검",
-        "갤러리 사용법", "카카오톡 사진·영상 전송", "글씨 크기·밝기 조절",
-        "배달앱 주문·결제", "KTX·고속버스 예매", "카카오택시", "병원 예약·모바일 처방전",
-        "보이스피싱 대응법", "스팸·광고 차단 설정"
-    ]
+    /// 자녀 신청의 과목 선택과 같은 목록을 쓴다 (LessonSubject.all)
+    let curriculumItems = LessonSubject.all.map(\.name)
 
     let recommendItems = ["배달앱 주문", "KTX 예매", "카카오택시", "병원 예약", "스팸 차단 앱"]
 

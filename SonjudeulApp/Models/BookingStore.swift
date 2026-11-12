@@ -20,6 +20,8 @@ struct BookingRecord: Identifiable, Codable {
     // 부모님 기본 정보와 위치 수집·공유 동의 시각 (이전 예약에는 없다)
     var parentInfo: ParentInfo? = nil
     var locationConsentAt: Date? = nil
+    // 자녀가 신청한 수업 과목 (과목 선택 기능 이전 예약에는 없다)
+    var subjects: [LessonSubject]? = nil
 
     var statusColor: Color {
         switch status {
@@ -51,6 +53,7 @@ enum BookingRequestError: Error, Equatable {
     case invalidParentInfo(String)
     case missingParentLocation
     case missingLocationConsent
+    case invalidSubjects(String)
     case saveFailed
 
     var message: String {
@@ -58,6 +61,7 @@ enum BookingRequestError: Error, Equatable {
         case .invalidParentInfo(let message): return message
         case .missingParentLocation:  return "부모님 거주 위치를 선택해 주세요."
         case .missingLocationConsent: return "부모님 위치 정보 수집·제공에 동의해 주세요."
+        case .invalidSubjects(let message): return message
         case .saveFailed:             return "예약을 저장하지 못했어요. 다시 시도해주세요."
         }
     }
@@ -111,6 +115,9 @@ class BookingStore: ObservableObject {
         }
         guard record.locationConsentAt != nil else {
             throw BookingRequestError.missingLocationConsent
+        }
+        if let error = LessonSubject.validationError(record.subjects ?? []) {
+            throw BookingRequestError.invalidSubjects(error)
         }
         bookings.insert(record, at: 0)
         do {
@@ -288,7 +295,8 @@ class BookingStore: ObservableObject {
                                     parentLocation: previous.parentLocation,
                                     parentAddressDetail: previous.parentAddressDetail,
                                     parentInfo: previous.parentInfo,
-                                    locationConsentAt: previous.locationConsentAt)
+                                    locationConsentAt: previous.locationConsentAt,
+                                    subjects: previous.subjects)
         bookings[idx] = updated
         do {
             try persist()

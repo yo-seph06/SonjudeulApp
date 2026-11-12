@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 enum BookingStep {
-    case plan, bookingInfo, complete
+    case plan, bookingInfo, subjects, complete
 }
 
 enum PlanType {
@@ -21,6 +21,8 @@ class BookingViewModel: ObservableObject {
     @Published var customRelationship: String = ""
     @Published var parentNotes: String = ""
     @Published var locationConsent: Bool = false
+    /// 선택한 과목 ID (중복 없이 선택 순서대로)
+    @Published var selectedSubjectIDs: [String] = []
     @Published var address: String = ""
     @Published var addressDetail: String = ""
     /// 지도에서 선택한 위치. 주소 입력란(address)은 이 값으로만 채워진다.
@@ -54,6 +56,23 @@ class BookingViewModel: ObservableObject {
     var completedRequiredCount: Int { requiredErrors.filter { $0 == nil }.count }
     var isParentInfoComplete: Bool { completedRequiredCount == requiredCount }
 
+    // MARK: - 수업 과목
+
+    /// 공통 과목 목록 순서대로 정렬한 선택 과목
+    var selectedSubjects: [LessonSubject] {
+        LessonSubject.all.filter { selectedSubjectIDs.contains($0.id) }
+    }
+
+    var subjectError: String? { LessonSubject.validationError(selectedSubjects) }
+
+    func toggleSubject(_ subject: LessonSubject) {
+        if let index = selectedSubjectIDs.firstIndex(of: subject.id) {
+            selectedSubjectIDs.remove(at: index)
+        } else if LessonSubject.find(id: subject.id) != nil {
+            selectedSubjectIDs.append(subject.id)
+        }
+    }
+
     /// 필수 항목이 모두 올바를 때만 저장용 부모님 정보를 만든다.
     func makeParentInfo() -> ParentInfo? {
         guard isParentInfoComplete, let relationship, let age = Int(ParentInfoRule.trimmed(parentAge)) else { return nil }
@@ -85,6 +104,9 @@ class BookingViewModel: ObservableObject {
         if let location = record.parentLocation, location.isValid {
             setParentLocation(location, detail: record.parentAddressDetail ?? "")
         }
+        if selectedSubjectIDs.isEmpty, let subjects = record.subjects {
+            selectedSubjectIDs = subjects.map(\.id).filter { LessonSubject.find(id: $0) != nil }
+        }
     }
 
     func setParentLocation(_ location: ParentLocation, detail: String) {
@@ -98,6 +120,9 @@ class BookingViewModel: ObservableObject {
         case .plan:        currentStep = .bookingInfo
         case .bookingInfo:
             guard isParentInfoComplete else { return }
+            currentStep = .subjects
+        case .subjects:
+            guard isParentInfoComplete, subjectError == nil else { return }
             currentStep = .complete
         case .complete:    break
         }
@@ -112,6 +137,7 @@ class BookingViewModel: ObservableObject {
         customRelationship = ""
         parentNotes = ""
         locationConsent = false
+        selectedSubjectIDs = []
         address = ""
         addressDetail = ""
         parentLocation = nil

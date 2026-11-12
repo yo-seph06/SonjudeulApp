@@ -52,6 +52,8 @@
 		B040 /* BookingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A040 /* BookingStore.swift */; };
 		B071 /* PlaceSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A071 /* PlaceSearchService.swift */; };
 		B073 /* ParentInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A073 /* ParentInfo.swift */; };
+		B074 /* LessonSubject.swift in Sources */ = {isa = PBXBuildFile; fileRef = A074 /* LessonSubject.swift */; };
+		B075 /* SubjectSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A075 /* SubjectSelectView.swift */; };
 		B041 /* MentorProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A041 /* MentorProfileView.swift */; };
 		B042 /* ReportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A042 /* ReportStore.swift */; };
 		B043 /* MentorRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A043 /* MentorRatingView.swift */; };
@@ -126,6 +128,8 @@
 		A040 /* BookingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingStore.swift; sourceTree = "<group>"; };
 		A071 /* PlaceSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchService.swift; sourceTree = "<group>"; };
 		A073 /* ParentInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentInfo.swift; sourceTree = "<group>"; };
+		A074 /* LessonSubject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonSubject.swift; sourceTree = "<group>"; };
+		A075 /* SubjectSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectSelectView.swift; sourceTree = "<group>"; };
 		A072 /* Kakao.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Kakao.xcconfig; sourceTree = "<group>"; };
 		A041 /* MentorProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorProfileView.swift; sourceTree = "<group>"; };
 		A042 /* ReportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportStore.swift; sourceTree = "<group>"; };
@@ -207,6 +211,7 @@
 				A023 /* PlanSelectView.swift */,
 				A024 /* ParentInfoView.swift */,
 				A070 /* ParentLocationPickerView.swift */,
+				A075 /* SubjectSelectView.swift */,
 				A026 /* MentorMatchingView.swift */,
 				A027 /* BookingCompleteView.swift */,
 			);
@@ -274,6 +279,7 @@
 				A040 /* BookingStore.swift */,
 				A071 /* PlaceSearchService.swift */,
 				A073 /* ParentInfo.swift */,
+				A074 /* LessonSubject.swift */,
 				A042 /* ReportStore.swift */,
 				980A32C637F4D7A57225BC96 /* ScheduleEvent.swift */,
 				31CEB07BF0D2F6E9ECD0CBAD /* ScheduleStore.swift */,
@@ -442,6 +448,8 @@
 				B040 /* BookingStore.swift in Sources */,
 				B071 /* PlaceSearchService.swift in Sources */,
 				B073 /* ParentInfo.swift in Sources */,
+				B074 /* LessonSubject.swift in Sources */,
+				B075 /* SubjectSelectView.swift in Sources */,
 				B007 /* AuthViewModel.swift in Sources */,
 				B008 /* BookingViewModel.swift in Sources */,
 				B009 /* ReportViewModel.swift in Sources */,

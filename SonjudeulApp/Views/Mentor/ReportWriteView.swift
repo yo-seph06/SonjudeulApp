@@ -11,6 +11,14 @@ struct ReportWriteView: View {
 
     @State private var showSuccess = false
 
+    /// 자녀가 신청한 과목. 과목 선택 기능 이전 예약은 비어 있다.
+    private var requestedSubjects: [LessonSubject] { booking?.subjects ?? [] }
+
+    /// 리포트에 고를 수 있는 과목: 신청 과목이 있으면 그 과목만, 없으면(이전 예약) 전체 목록
+    private var allowedItems: [String] {
+        requestedSubjects.isEmpty ? reportVM.curriculumItems : requestedSubjects.map(\.name)
+    }
+
     var body: some View {
         ZStack {
             Color.sonjuBackground.ignoresSafeArea()
@@ -36,6 +44,17 @@ struct ReportWriteView: View {
                         }
                     }
 
+                    if !requestedSubjects.isEmpty {
+                        SonjuCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Label("자녀가 신청한 과목", systemImage: "checklist")
+                                    .font(.sonjuHeadline)
+                                    .foregroundColor(.sonjuText)
+                                SubjectChips(subjects: requestedSubjects)
+                            }
+                        }
+                    }
+
                     // Photo picker area
                     VStack(alignment: .leading, spacing: 12) {
                         Text("부모님 사진 추가")
@@ -55,8 +74,13 @@ struct ReportWriteView: View {
                         Text("교육 완료 항목")
                             .font(.sonjuHeadline)
                             .foregroundColor(.sonjuText)
+                        if !requestedSubjects.isEmpty {
+                            Text("자녀가 신청한 과목 중에서 선택할 수 있어요")
+                                .font(.sonjuCaption)
+                                .foregroundColor(.sonjuSecondary)
+                        }
                         VStack(spacing: 0) {
-                            ForEach(reportVM.curriculumItems, id: \.self) { item in
+                            ForEach(allowedItems, id: \.self) { item in
                                 CheckRow(
                                     title: item,
                                     isChecked: reportVM.completedItems.contains(item),
@@ -170,6 +194,10 @@ struct ReportWriteView: View {
         .navigationTitle("리포트 작성")
         .navigationBarTitleDisplayMode(.large)
         .animation(.spring(response: 0.4), value: showSuccess)
+        .onAppear {
+            // 다른 예약에서 체크한 항목이 남아 있으면 신청 과목 밖의 항목은 지운다
+            reportVM.completedItems.formIntersection(allowedItems)
+        }
     }
 
     private func submitReport() {
@@ -181,12 +209,15 @@ struct ReportWriteView: View {
             return f.string(from: Date())
         }()
 
+        // 신청하지 않은 과목은 리포트에 넣지 않는다
+        let completed = reportVM.completedItems.intersection(allowedItems)
+
         let report = Report(
             date: booking?.date ?? dateStr,
-            summary: "\(Array(reportVM.completedItems).prefix(2).joined(separator: ", ")) 교육 완료",
+            summary: "\(Array(completed).prefix(2).joined(separator: ", ")) 교육 완료",
             mentorName: mentorName,
             mentorNote: reportVM.mentorNote.isEmpty ? "오늘도 수고하셨어요!" : reportVM.mentorNote,
-            checklist: Array(reportVM.completedItems),
+            checklist: Array(completed),
             nextItems: Array(reportVM.nextRecommendations),
             bookingId: booking?.id,
             childId: booking?.childId,

@@ -105,6 +105,22 @@ struct BookingRequesterProfileView: View {
                                     label: "방문 일시",
                                     value: booking.date
                                 )
+                                if let subjects = booking.subjects, !subjects.isEmpty {
+                                    Divider().background(Color.sonjuDivider)
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        HStack(spacing: 12) {
+                                            Image(systemName: "checklist")
+                                                .foregroundColor(.sonjuPrimary)
+                                                .font(.system(size: 15))
+                                                .frame(width: 20)
+                                            Text("신청 과목 \(subjects.count)개")
+                                                .font(.sonjuCaption)
+                                                .foregroundColor(.sonjuSecondary)
+                                        }
+                                        SubjectChips(subjects: subjects)
+                                    }
+                                    .padding(.vertical, 12)
+                                }
                             }
                         }
                         .padding(.horizontal, 24)

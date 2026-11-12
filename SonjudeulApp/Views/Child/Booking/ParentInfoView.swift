@@ -7,7 +7,6 @@ struct ParentInfoView: View {
 
     @State private var showLocationPicker = false
     @State private var triedSubmit = false
-    @State private var saveErrorMessage: String?
 
     private enum FormFieldID: Hashable {
         case name, age, phone, relationship, location, consent
@@ -243,7 +242,7 @@ struct ParentInfoView: View {
                         }
                     }
 
-                    AmberButton(title: "결제하기") {
+                    AmberButton(title: "다음") {
                         submit(proxy)
                     }
                     .padding(.bottom, 32)
@@ -264,14 +263,6 @@ struct ParentInfoView: View {
                                      initialDetail: bookingVM.addressDetail) { location, detail in
                 bookingVM.setParentLocation(location, detail: detail)
             }
-        }
-        .alert("신청 정보 확인", isPresented: Binding(
-            get: { saveErrorMessage != nil },
-            set: { if !$0 { saveErrorMessage = nil } }
-        )) {
-            Button("확인", role: .cancel) {}
-        } message: {
-            Text(saveErrorMessage ?? "")
         }
     }
 
@@ -355,7 +346,7 @@ struct ParentInfoView: View {
         .buttonStyle(PressButtonStyle())
     }
 
-    // MARK: - 신청
+    // MARK: - 다음 단계 (신청 저장은 과목 선택 단계의 결제하기에서 한다)
 
     private func submit(_ proxy: ScrollViewProxy) {
         triedSubmit = true
@@ -369,29 +360,6 @@ struct ParentInfoView: View {
         if let firstMissing {
             withAnimation { proxy.scrollTo(firstMissing, anchor: .top) }
             return
-        }
-        guard let info = bookingVM.makeParentInfo(), let location = bookingVM.parentLocation else { return }
-        if let childId = auth.currentUser?.id {
-            let detail = bookingVM.addressDetail.trimmingCharacters(in: .whitespacesAndNewlines)
-            do {
-                try bookingStore.addChildRequest(BookingRecord(
-                    date: BookingStore.displayDateText(bookingVM.visitDate),
-                    rawDate: bookingVM.visitDate,
-                    plan: bookingVM.planName,
-                    status: "멘토 찾는 중",
-                    childId: childId,
-                    parentLocation: location,
-                    parentAddressDetail: detail.isEmpty ? nil : detail,
-                    parentInfo: info,
-                    locationConsentAt: Date()
-                ))
-            } catch let error as BookingRequestError {
-                saveErrorMessage = error.message
-                return
-            } catch {
-                saveErrorMessage = BookingRequestError.saveFailed.message
-                return
-            }
         }
         withAnimation { bookingVM.nextStep() }
     }

@@ -17,6 +17,9 @@ struct BookingRecord: Identifiable, Codable {
     // 위치 등록 기능 이전 예약은 값이 없으므로 옵셔널로 둔다 (기존 저장 파일과 호환)
     var parentLocation: ParentLocation? = nil
     var parentAddressDetail: String? = nil
+    // 부모님 기본 정보와 위치 수집·공유 동의 시각 (이전 예약에는 없다)
+    var parentInfo: ParentInfo? = nil
+    var locationConsentAt: Date? = nil
 
     var statusColor: Color {
         switch status {
@@ -45,13 +48,17 @@ struct ParentLocation: Codable, Equatable {
 }
 
 enum BookingRequestError: Error, Equatable {
+    case invalidParentInfo(String)
     case missingParentLocation
+    case missingLocationConsent
     case saveFailed
 
     var message: String {
         switch self {
-        case .missingParentLocation: return "부모님의 위치 정보를 입력해 주세요."
-        case .saveFailed:            return "예약을 저장하지 못했어요. 다시 시도해주세요."
+        case .invalidParentInfo(let message): return message
+        case .missingParentLocation:  return "부모님 거주 위치를 선택해 주세요."
+        case .missingLocationConsent: return "부모님 위치 정보 수집·제공에 동의해 주세요."
+        case .saveFailed:             return "예약을 저장하지 못했어요. 다시 시도해주세요."
         }
     }
 }
@@ -90,10 +97,20 @@ class BookingStore: ObservableObject {
         save()
     }
 
-    /// 자녀의 예약 신청 저장. 부모님 위치(주소 + 위도·경도)가 없으면 저장하지 않는다.
+    /// 자녀의 예약 신청 저장. 화면 검증과 별개로 필수 부모님 정보·위치·동의를 다시 확인하고,
+    /// 하나라도 빠지면 저장하지 않는다.
     func addChildRequest(_ record: BookingRecord) throws {
+        guard let info = record.parentInfo else {
+            throw BookingRequestError.invalidParentInfo("부모님 정보를 입력해 주세요.")
+        }
+        if let error = ParentInfoRule.validate(info) {
+            throw BookingRequestError.invalidParentInfo(error)
+        }
         guard let location = record.parentLocation, location.isValid else {
             throw BookingRequestError.missingParentLocation
+        }
+        guard record.locationConsentAt != nil else {
+            throw BookingRequestError.missingLocationConsent
         }
         bookings.insert(record, at: 0)
         do {
@@ -177,6 +194,11 @@ class BookingStore: ObservableObject {
         bookings.removeAll { $0.childId == id && $0.status != "방문 완료" }
         for idx in bookings.indices where bookings[idx].childId == id {
             bookings[idx].childId = nil
+            // 완료 기록에도 부모님 개인정보·위치는 남기지 않는다
+            bookings[idx].parentInfo = nil
+            bookings[idx].parentLocation = nil
+            bookings[idx].parentAddressDetail = nil
+            bookings[idx].locationConsentAt = nil
         }
         save()
     }
@@ -264,7 +286,9 @@ class BookingStore: ObservableObject {
                                     childId: previous.childId, rating: previous.rating,
                                     reviewComment: previous.reviewComment, reportWritten: previous.reportWritten,
                                     parentLocation: previous.parentLocation,
-                                    parentAddressDetail: previous.parentAddressDetail)
+                                    parentAddressDetail: previous.parentAddressDetail,
+                                    parentInfo: previous.parentInfo,
+                                    locationConsentAt: previous.locationConsentAt)
         bookings[idx] = updated
         do {
             try persist()
